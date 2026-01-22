@@ -1,412 +1,558 @@
-# Vogelkop Data Center Database Design
+<div align="center">
+
+# 🗄️ Vogelkop Data Center Database Design
+
+**Comprehensive database architecture for conservation area management**
+
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![PostGIS](https://img.shields.io/badge/PostGIS-Enabled-4CAF50?style=flat-square&logo=leaflet&logoColor=white)](https://postgis.net/)
 
 ---
 
-**Document Version: 2.1**
-Last Update: 19 jan 2026
+**Document Version:** `2.1` • **Last Updated:** 19 January 2026
 
-## Table Of Content
-
----
-
-1. [Database Overview](#database-overview)
-2. [Entity Relation Diagram](#entity-relation-diagram)
-3. [Authentication](#authentication)
-4. [Core Table](#core-table)
-5. [Data Domain Table](#data-domain-table)
-6. [Junction Table](#junction-tables)
-7. [Enumerations](#enumerations)
-8. [Performance and Indexing](#performance-and_indexing)
-9. [Documentation](#documentation)
+</div>
 
 ---
 
-## Database Overview
+## 📑 Table of Contents
 
-Database design for the **Vogelkop Data Center** application, a system **designed to manage** conservation areas under the jurisdiction of **Balai Besar KSDA Papua Barat Daya**. It supports comprehensive conservation management **by implementing** data-driven governance **principles**.
-
-### Key Feature
-
-- **Conservation Area Management** Facilitates multi-location management with detailed tracking for administration, spatial planning, legal frameworks, annual assessments (_METT/RAPP_), and **conflict resolution**.
-- **Scientific Data Repository** Centralizes data on biodiversity, field observations, geological features, and terrain characteristics—covering both conservation areas and **surrounding landscapes** (buffer zones).
-- **Socio-Economic Management** Manages socio-economic demographics and community interaction data within and around conservation areas.
-- **Advanced Analytics** Provides **cross-domain analysis capabilities** to drive strategic conservation management and decision-making.
-- **Organizational Collaboration** Supports multi-stakeholder engagement, including **NGO partnerships** and external organization access.
-
----
-
-## Entity Relation Digaram
-
-ERD on Progress and can be monitoring here -> ![[Normalisasi data SIDAK]]
+|  #  | Section                                              | Description                      |
+| :-: | ---------------------------------------------------- | -------------------------------- |
+|  1  | [Database Overview](#-database-overview)             | System purpose and key features  |
+|  2  | [Entity Relation Diagram](#-entity-relation-diagram) | Visual database schema           |
+|  3  | [Design Guidelines](#-table-design-guidelines)       | Naming conventions and standards |
+|  4  | [Authentication](#-authentication)                   | User and session management      |
+|  5  | [Core Tables](#-core-tables)                         | Primary data entities            |
+|  6  | [Data Domain Tables](#-data-domain-tables)           | Domain-specific data structures  |
+|  7  | [Junction Tables](#-junction-tables)                 | Relationship mapping tables      |
+|  8  | [Enumerations](#-enumerations)                       | Predefined value types           |
+|  9  | [Performance & Indexing](#-performance-and-indexing) | Optimization strategies          |
+| 10  | [Documentation](#-documentation)                     | Version history and maintenance  |
 
 ---
 
-## Table Design Guideline
+## 📋 Database Overview
 
-### 1. Naming Conventions
+Database design for the **Vogelkop Data Center** application—a system designed to manage conservation areas under the jurisdiction of **Balai Besar KSDA Papua Barat Daya**, implementing data-driven governance principles.
 
-- **Table Naming:** All tables must be prefixed with `vogelkop_` to maintain namespace consistency.
-  > _Example:_ `vogelkop_users`, `vogelkop_conservation_areas`.
-- **Column Naming:** Every field (column) must be prefixed with its respective table name (singular/snake_case) to ensure global uniqueness in queries.
-  > _Example:_ In table `vogelkop_users`, fields should be `user_name`, `user_email`, `user_role`.
+### ✨ Key Features
 
-### **2. Primary Keys**
+| Feature                             | Description                                                                                                                              |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 🏞️ **Conservation Area Management** | Multi-location tracking with administration, spatial planning, legal frameworks, annual assessments (METT/RAPP), and conflict resolution |
+| 🔬 **Scientific Data Repository**   | Centralized biodiversity data, field observations, geological features, and terrain characteristics for areas and buffer zones           |
+| 👥 **Socio-Economic Management**    | Demographics and community interaction data within and around conservation areas                                                         |
+| 📊 **Advanced Analytics**           | Cross-domain analysis capabilities for strategic conservation decision-making                                                            |
+| 🤝 **Organizational Collaboration** | Multi-stakeholder engagement including NGO partnerships and external access                                                              |
 
-- **UUID Standard:** All Primary Keys (IDs) must use **UUID** (Universally Unique Identifier) format instead of auto-increment integers.
+---
 
-### **3. Audit Trails & Lifecycle (Metadata)**
+## 🔗 Entity Relation Diagram
 
-Every table must include the following standard columns for auditing and soft-delete mechanisms:
+> [!NOTE]
+> ERD is in progress and can be monitored here → `[[Normalisasi data SIDAK]]`
 
-- **Timestamps:**
-  - `created_at` _(Timestamp)_: Record creation time.
-  - `updated_at` _(Timestamp)_: Last modification time.
-  - `deleted_at` _(Timestamp, Nullable)_: Timestamp when the record was soft-deleted.
-- **Soft Delete Status:**
-  - `is_active` _(Boolean)_: Indicator of record availability (default: `true`).
-  - `deleted_by` _(UUID, Nullable)_: ID of the user who performed the soft delete.
+---
 
-## Authentication
+## 📐 Table Design Guidelines
 
-vogelkop_users
+### 1️⃣ Naming Conventions
 
-| field         | type   | note                   |
-| ------------- | ------ | ---------------------- |
-| user_ID       | UUID   | primary key            |
-| role_ID       | UUID   | foreign                |
-| user_email    | string | not null               |
-| user_name     | string | not null               |
-| user_password | hash   | do hashing here        |
-| user_avatar   | string | relative path          |
-| user_verified | date   | timestamp verification |
+| Element     | Convention                                   | Example                                         |
+| ----------- | -------------------------------------------- | ----------------------------------------------- |
+| **Tables**  | Prefix with `vogelkop_`                      | `vogelkop_users`, `vogelkop_conservation_areas` |
+| **Columns** | Prefix with table name (singular/snake_case) | `user_name`, `user_email`, `user_role`          |
 
-vogelkop_account
+### 2️⃣ Primary Keys
 
-| field               | type   | note                 |
-| ------------------- | ------ | -------------------- |
-| user_ID             | UUID   |                      |
-| account_type        | string | adapter type         |
-| acoount_provider    | string | primary key/not null |
-| account_provider_ID | string | primary key/not null |
-| refresh_token       | text   |                      |
-| access_token        | text   |                      |
-| expires_at          | int    |                      |
-| token_type          | string |                      |
-| account_scope       | string |                      |
-| id_token            | text   |                      |
-| session_state       | string |                      |
+> [!IMPORTANT]
+> All Primary Keys must use **UUID** (Universally Unique Identifier) format instead of auto-increment integers.
 
-vogelkop_role
+### 3️⃣ Audit Trails & Lifecycle
 
-> [!must seeded] Initial seeded
+Every table must include these standard metadata columns:
+
+| Column       | Type                 | Purpose                               |
+| ------------ | -------------------- | ------------------------------------- |
+| `created_at` | Timestamp            | Record creation time                  |
+| `updated_at` | Timestamp            | Last modification time                |
+| `deleted_at` | Timestamp (Nullable) | Soft-delete timestamp                 |
+| `is_active`  | Boolean              | Record availability (default: `true`) |
+| `deleted_by` | UUID (Nullable)      | User who performed soft delete        |
+
+---
+
+## 🔐 Authentication
+
+### `vogelkop_users`
+
+| Field           | Type   | Note                   |
+| --------------- | ------ | ---------------------- |
+| `user_ID`       | UUID   | 🔑 Primary Key         |
+| `role_ID`       | UUID   | 🔗 Foreign Key         |
+| `user_email`    | String | Not Null               |
+| `user_name`     | String | Not Null               |
+| `user_password` | Hash   | Hashed value           |
+| `user_avatar`   | String | Relative path          |
+| `user_verified` | Date   | Verification timestamp |
+
+---
+
+### `vogelkop_account`
+
+| Field                 | Type   | Note                      |
+| --------------------- | ------ | ------------------------- |
+| `user_ID`             | UUID   | 🔗 Foreign Key            |
+| `account_type`        | String | Adapter type              |
+| `account_provider`    | String | 🔑 Primary Key / Not Null |
+| `account_provider_ID` | String | 🔑 Primary Key / Not Null |
+| `refresh_token`       | Text   |                           |
+| `access_token`        | Text   |                           |
+| `expires_at`          | Int    |                           |
+| `token_type`          | String |                           |
+| `account_scope`       | String |                           |
+| `id_token`            | Text   |                           |
+| `session_state`       | String |                           |
+
+---
+
+### `vogelkop_role`
+
+> [!CAUTION] > **Initial Seeding Required**
 >
-> - guest
-> - admin
-> - staff
+> - `guest`
+> - `admin`
+> - `staff`
 
-| field            | type      | note               |
-| ---------------- | --------- | ------------------ |
-| role_ID          | UUID      |                    |
-| role_name        | string    | not null           |
-| role_description | text      |                    |
-| role_permission  | list/json | list of permission |
-
-vogelkop_session
-
-| field         | type   | note      |
-| ------------- | ------ | --------- |
-| session_token | string | primary   |
-| user_ID       | string |           |
-| expires       | date   | timestamp |
-
-vogelkop_verification_token
-
-| field      | type   | note |
-| ---------- | ------ | ---- |
-| identifier | string |      |
-| token      | string |      |
-| expires    | date   |      |
-
-## Core Table
-
-### Conservation Areas Table (Master Table)
-
-vogelkop_conservation_areas
-
-| field            | type   | note                    |
-| ---------------- | ------ | ----------------------- |
-| area_ID          | UUID   | primary key             |
-| area_register    | int    | not null                |
-| area_name        | string |                         |
-| area_description | text   |                         |
-| area_note        | text   | area status description |
-
-vogelkop_legal_decisions
-
-| field                | type   | note            |
-| -------------------- | ------ | --------------- |
-| decision_ID          | UUID   | primary key     |
-| decision_name        | string | document name   |
-| decision_date        | date   | approval date   |
-| decision_number      | string | document number |
-| decision_description | text   |                 |
-
-vogelkop_locations
-
-| field         | type   | note        |
-| ------------- | ------ | ----------- |
-| location_ID   | UUID   | primary key |
-| regency_name  | string |             |
-| province_name | string |             |
-
-vogelkop_functions
-
-| field               | type   | note        |
-| ------------------- | ------ | ----------- |
-| function_ID         | uuid   | primary key |
-| function_name       | string |             |
-| function_decription | text   |             |
+| Field              | Type      | Note            |
+| ------------------ | --------- | --------------- |
+| `role_ID`          | UUID      | 🔑 Primary Key  |
+| `role_name`        | String    | Not Null        |
+| `role_description` | Text      |                 |
+| `role_permission`  | List/JSON | Permission list |
 
 ---
 
-## Data Domain Table
+### `vogelkop_session`
 
-### Planning Table
-
-vogelkop_zoning_blocks
-
-| field             | type | note            |
-| ----------------- | ---- | --------------- |
-| block_ID          | UUID | primary key     |
-| area_ID           | UUID | foreign key     |
-| block_type        | enum | block type enum |
-| block_description | text |                 |
-
-vogelkop_area_plannings
-
-| field              | type | note            |
-| ------------------ | ---- | --------------- |
-| plan_ID            | UUID | primary         |
-| area_ID            | UUID | foreign         |
-| plan_start         | date | date/ just year |
-| plan_end           | date | date/ just year |
-| plan_status        | enum | status enum     |
-| plan_approval_date | date |                 |
-| plan_description   | text |                 |
-
-vogelkop_documents
-
-| field                | type   | note          |
-| -------------------- | ------ | ------------- |
-| document_ID          | UUID   | primary       |
-| area_ID              | UUID   | foreign       |
-| document_name        | string |               |
-| document_number      | string |               |
-| document_type        | enum   |               |
-| document_path        | string | relative path |
-| document_cover       | string | relative path |
-| document_description | text   |               |
-
-vogelkop_ecosistem_recoveries
-
-| field                 | type  | note                   |
-| --------------------- | ----- | ---------------------- |
-| recovery_ID           | UUID  | primary                |
-| area_ID               | UUID  | foreign                |
-| recovery_site         | int   | total site to recovery |
-| recovery_area         | float | total recovary area    |
-| recovery_damage_level | enum  | enum demage level      |
-| cause_of_damage       | enum  |                        |
-| recovery_action       | enum  |                        |
-
-vogelkop_assessments
-
-| field                  | type | note               |
-| ---------------------- | ---- | ------------------ |
-| assessment_ID          | UUID | primary            |
-| area_ID                | UUID | foreign            |
-| assessment_year        | int  | date/year          |
-| assessment_score       | int  |                    |
-| assessment_category    | enum | enum(efektive/not) |
-| assessment_description | text |                    |
-
-vogelkop_certificates_in_area
-
-| field                   | type  | note       |
-| ----------------------- | ----- | ---------- |
-| certificate_ID          | UUID  | primary    |
-| area_ID                 | UUID  | foreign    |
-| certificate_right       | enum  | right type |
-| certificate_NIB         | int   | NIB?       |
-| certificate_area        | float | area in HA |
-| certificate_progress    | text  |            |
-| certificate_bhumi_info  | text  |            |
-| certificate_description | text  |            |
-| location_ID             | UUID  | foreign    |
-
-vogelkop_build_up_areas
-
-| field                | type   | note         |
-| -------------------- | ------ | ------------ |
-| buildup_ID           | UUID   | primary key  |
-| area_ID              | UUID   | foreign      |
-| buildup_subject_type | enum   | subject type |
-| buildup_area         | float  | area HA      |
-| buildup_activities   | string |              |
-| buildup_year         | date   |              |
-| buildup_permit       | string |              |
-| buildup_layout       | string |              |
-| buildup_overlap      | text   |              |
-| buildup_status       | enum   |              |
-| buildup_survey_year  | date   |              |
-| buildup_subject_name | string |              |
+| Field           | Type   | Note           |
+| --------------- | ------ | -------------- |
+| `session_token` | String | 🔑 Primary Key |
+| `user_ID`       | String | 🔗 Foreign Key |
+| `expires`       | Date   | Timestamp      |
 
 ---
 
-## Junction tables
+### `vogelkop_verification_token`
 
-vogelkop_area_decision
-
-| field            | type  | note    |
-| ---------------- | ----- | ------- |
-| area_decision_ID | UUID  | primary |
-| area_ID          | UUID  |         |
-| decision_ID      | UUID  |         |
-| decision_area    | float | area HA |
-
-vogelkop_area_locations
-
-| field            | type    |
-| ---------------- | ------- |
-| area_location_ID | primary |
-| location_ID      |         |
-| area_ID          |         |
-| location_area    | area HA |
-
-vogelkop_area_functions
-
-| field         | type |
-| ------------- | ---- |
-| area_function | UUID |
-| function_ID   | UUID |
-| area_ID       | UUID |
-
-vogelkop_planning_documents
-
-| field            | type | note |
-| ---------------- | ---- | ---- |
-| plan_document_ID | UUID |      |
-| document_ID      | UUID |      |
-| plan_ID          | UUID |      |
-
-vogelkop_recovery_locations
-
-| field                | type   |
-| -------------------- | ------ |
-| recovery_location_ID | UUID   |
-| location_ID          | UUID   |
-| recovery_ID          | UUID   |
-| district_name        | String |
-| village_name         | String |
-
-vogelkop_recovery_blocks
-
-| field             | type |
-| ----------------- | ---- |
-| recovery_block_ID | UUID |
-| block_ID          | UUID |
-| recovery_ID       | UUID |
-
-vogelkop_buildup_locations
-
-| field               | type   |
-| ------------------- | ------ |
-| buildup_location_ID | UUID   |
-| location_ID         | UUID   |
-| buildup_ID          | UUID   |
-| district_name       | string |
-| village_name        | string |
-
-vogelkop_activity_logs
-
-| field           | type   | note                |
-| --------------- | ------ | ------------------- |
-| log_ID          | UUID   | primary             |
-| user_ID         | UUID   | foreign             |
-| log_action_type | enum   |                     |
-| entity_table    | string | table name          |
-| entity_ID       | UUID   | enity id not null   |
-| changes         | json   |                     |
-| ip_address      | string | ip not null         |
-| user_agent      | text   | user agent not null |
+| Field        | Type   | Note |
+| ------------ | ------ | ---- |
+| `identifier` | String |      |
+| `token`      | String |      |
+| `expires`    | Date   |      |
 
 ---
 
-## Enumerations
+## 🏛️ Core Tables
+
+### `vogelkop_conservation_areas` _(Master Table)_
+
+| Field              | Type   | Note               |
+| ------------------ | ------ | ------------------ |
+| `area_ID`          | UUID   | 🔑 Primary Key     |
+| `area_register`    | Int    | Not Null           |
+| `area_name`        | String |                    |
+| `area_description` | Text   |                    |
+| `area_note`        | Text   | Status description |
+
+---
+
+### `vogelkop_legal_decisions`
+
+| Field                  | Type   | Note            |
+| ---------------------- | ------ | --------------- |
+| `decision_ID`          | UUID   | 🔑 Primary Key  |
+| `decision_name`        | String | Document name   |
+| `decision_date`        | Date   | Approval date   |
+| `decision_number`      | String | Document number |
+| `decision_description` | Text   |                 |
+
+---
+
+### `vogelkop_locations`
+
+| Field           | Type   | Note           |
+| --------------- | ------ | -------------- |
+| `location_ID`   | UUID   | 🔑 Primary Key |
+| `regency_name`  | String |                |
+| `province_name` | String |                |
+
+---
+
+### `vogelkop_functions`
+
+| Field                  | Type   | Note           |
+| ---------------------- | ------ | -------------- |
+| `function_ID`          | UUID   | 🔑 Primary Key |
+| `function_name`        | String |                |
+| `function_description` | Text   |                |
+
+---
+
+## 📊 Data Domain Tables
+
+### 📅 Planning Tables
+
+#### `vogelkop_zoning_blocks`
+
+| Field               | Type | Note                          |
+| ------------------- | ---- | ----------------------------- |
+| `block_ID`          | UUID | 🔑 Primary Key                |
+| `area_ID`           | UUID | 🔗 Foreign Key                |
+| `block_type`        | Enum | [`block_type`](#enumerations) |
+| `block_description` | Text |                               |
+
+---
+
+#### `vogelkop_area_plannings`
+
+| Field                | Type | Note                           |
+| -------------------- | ---- | ------------------------------ |
+| `plan_ID`            | UUID | 🔑 Primary Key                 |
+| `area_ID`            | UUID | 🔗 Foreign Key                 |
+| `plan_start`         | Date | Year only                      |
+| `plan_end`           | Date | Year only                      |
+| `plan_status`        | Enum | [`plan_status`](#enumerations) |
+| `plan_approval_date` | Date |                                |
+| `plan_description`   | Text |                                |
+
+---
+
+#### `vogelkop_documents`
+
+| Field                  | Type   | Note                             |
+| ---------------------- | ------ | -------------------------------- |
+| `document_ID`          | UUID   | 🔑 Primary Key                   |
+| `area_ID`              | UUID   | 🔗 Foreign Key                   |
+| `document_name`        | String |                                  |
+| `document_number`      | String |                                  |
+| `document_type`        | Enum   | [`document_type`](#enumerations) |
+| `document_path`        | String | Relative path                    |
+| `document_cover`       | String | Relative path                    |
+| `document_description` | Text   |                                  |
+
+---
+
+### 🌿 Recovery & Assessment Tables
+
+#### `vogelkop_ecosistem_recoveries`
+
+| Field                   | Type  | Note                                     |
+| ----------------------- | ----- | ---------------------------------------- |
+| `recovery_ID`           | UUID  | 🔑 Primary Key                           |
+| `area_ID`               | UUID  | 🔗 Foreign Key                           |
+| `recovery_site`         | Int   | Total sites                              |
+| `recovery_area`         | Float | Total area (HA)                          |
+| `recovery_damage_level` | Enum  | [`recovery_damage_level`](#enumerations) |
+| `cause_of_damage`       | Enum  | [`damage_cause`](#enumerations)          |
+| `recovery_action`       | Enum  | [`recovery_action`](#enumerations)       |
+
+---
+
+#### `vogelkop_assessments`
+
+| Field                    | Type | Note                                   |
+| ------------------------ | ---- | -------------------------------------- |
+| `assessment_ID`          | UUID | 🔑 Primary Key                         |
+| `area_ID`                | UUID | 🔗 Foreign Key                         |
+| `assessment_year`        | Int  | Year                                   |
+| `assessment_score`       | Int  |                                        |
+| `assessment_category`    | Enum | [`assessment_category`](#enumerations) |
+| `assessment_description` | Text |                                        |
+
+---
+
+### 📜 Certification & Build-up Tables
+
+#### `vogelkop_certificates_in_area`
+
+| Field                     | Type  | Note                                 |
+| ------------------------- | ----- | ------------------------------------ |
+| `certificate_ID`          | UUID  | 🔑 Primary Key                       |
+| `area_ID`                 | UUID  | 🔗 Foreign Key                       |
+| `certificate_right`       | Enum  | [`certificate_right`](#enumerations) |
+| `certificate_NIB`         | Int   | NIB Number                           |
+| `certificate_area`        | Float | Area (HA)                            |
+| `certificate_progress`    | Text  |                                      |
+| `certificate_bhumi_info`  | Text  |                                      |
+| `certificate_description` | Text  |                                      |
+| `location_ID`             | UUID  | 🔗 Foreign Key                       |
+
+---
+
+#### `vogelkop_build_up_areas`
+
+| Field                  | Type   | Note                                    |
+| ---------------------- | ------ | --------------------------------------- |
+| `buildup_ID`           | UUID   | 🔑 Primary Key                          |
+| `area_ID`              | UUID   | 🔗 Foreign Key                          |
+| `buildup_subject_type` | Enum   | [`buildup_subject_type`](#enumerations) |
+| `buildup_area`         | Float  | Area (HA)                               |
+| `buildup_activities`   | String |                                         |
+| `buildup_year`         | Date   |                                         |
+| `buildup_permit`       | String |                                         |
+| `buildup_layout`       | String |                                         |
+| `buildup_overlap`      | Text   |                                         |
+| `buildup_status`       | Enum   | [`buildup_status`](#enumerations)       |
+| `buildup_survey_year`  | Date   |                                         |
+| `buildup_subject_name` | String |                                         |
+
+---
+
+## 🔀 Junction Tables
+
+### Area Relationships
+
+#### `vogelkop_area_decision`
+
+| Field              | Type  | Note           |
+| ------------------ | ----- | -------------- |
+| `area_decision_ID` | UUID  | 🔑 Primary Key |
+| `area_ID`          | UUID  | 🔗 Foreign Key |
+| `decision_ID`      | UUID  | 🔗 Foreign Key |
+| `decision_area`    | Float | Area (HA)      |
+
+---
+
+#### `vogelkop_area_locations`
+
+| Field              | Type  | Note           |
+| ------------------ | ----- | -------------- |
+| `area_location_ID` | UUID  | 🔑 Primary Key |
+| `location_ID`      | UUID  | 🔗 Foreign Key |
+| `area_ID`          | UUID  | 🔗 Foreign Key |
+| `location_area`    | Float | Area (HA)      |
+
+---
+
+#### `vogelkop_area_functions`
+
+| Field           | Type | Note           |
+| --------------- | ---- | -------------- |
+| `area_function` | UUID | 🔑 Primary Key |
+| `function_ID`   | UUID | 🔗 Foreign Key |
+| `area_ID`       | UUID | 🔗 Foreign Key |
+
+---
+
+### Document & Planning Relationships
+
+#### `vogelkop_planning_documents`
+
+| Field              | Type | Note           |
+| ------------------ | ---- | -------------- |
+| `plan_document_ID` | UUID | 🔑 Primary Key |
+| `document_ID`      | UUID | 🔗 Foreign Key |
+| `plan_ID`          | UUID | 🔗 Foreign Key |
+
+---
+
+### Recovery Relationships
+
+#### `vogelkop_recovery_locations`
+
+| Field                  | Type   | Note           |
+| ---------------------- | ------ | -------------- |
+| `recovery_location_ID` | UUID   | 🔑 Primary Key |
+| `location_ID`          | UUID   | 🔗 Foreign Key |
+| `recovery_ID`          | UUID   | 🔗 Foreign Key |
+| `district_name`        | String |                |
+| `village_name`         | String |                |
+
+---
+
+#### `vogelkop_recovery_blocks`
+
+| Field               | Type | Note           |
+| ------------------- | ---- | -------------- |
+| `recovery_block_ID` | UUID | 🔑 Primary Key |
+| `block_ID`          | UUID | 🔗 Foreign Key |
+| `recovery_ID`       | UUID | 🔗 Foreign Key |
+
+---
+
+### Build-up Relationships
+
+#### `vogelkop_buildup_locations`
+
+| Field                 | Type   | Note           |
+| --------------------- | ------ | -------------- |
+| `buildup_location_ID` | UUID   | 🔑 Primary Key |
+| `location_ID`         | UUID   | 🔗 Foreign Key |
+| `buildup_ID`          | UUID   | 🔗 Foreign Key |
+| `district_name`       | String |                |
+| `village_name`        | String |                |
+
+---
+
+### Activity Logging
+
+#### `vogelkop_activity_logs`
+
+| Field             | Type   | Note                                |
+| ----------------- | ------ | ----------------------------------- |
+| `log_ID`          | UUID   | 🔑 Primary Key                      |
+| `user_ID`         | UUID   | 🔗 Foreign Key                      |
+| `log_action_type` | Enum   | [`logs_action_type`](#enumerations) |
+| `entity_table`    | String | Table name                          |
+| `entity_ID`       | UUID   | Not Null                            |
+| `changes`         | JSON   |                                     |
+| `ip_address`      | String | Not Null                            |
+| `user_agent`      | Text   | Not Null                            |
+
+---
+
+## 🏷️ Enumerations
+
+### Block Types
 
 ```sql
-
 CREATE TYPE block_type AS ENUM (
-    'blok_pelindungan', 'blok_perlindungan_bahari', 'blok_khusus',
-    'blok_rehabilitasi', 'blok_traditional', 'blok_religi', 'blok_pemanfaatan'
-	);
+    'blok_pelindungan',
+    'blok_perlindungan_bahari',
+    'blok_khusus',
+    'blok_rehabilitasi',
+    'blok_traditional',
+    'blok_religi',
+    'blok_pemanfaatan'
+);
+```
 
+### Plan Status
+
+```sql
 CREATE TYPE plan_status AS ENUM (
-	'active','proses_revisi', 'menunggu_ekf', 'proses_telaah', 'draft', 'konsultasi_publik', 'complete',
-	);
+    'active',
+    'proses_revisi',
+    'menunggu_ekf',
+    'proses_telaah',
+    'draft',
+    'konsultasi_publik',
+    'complete'
+);
+```
 
+### Document Types
+
+```sql
 CREATE TYPE document_type AS ENUM (
-	-- legal decision document types
-	'ba_tata_batas', 'sk_penunjukan', 'sk_penetapan', 'sk_penunjukan_parsial',
-	-- zoning blok document type
-	'penataan_blok', 'konsultasi_publik', 'evaluasi_blok', 'evaluasi_konsultasi',
-	-- planning document type
-	'dokumen_rpjp', 'evaluasi_rpjp', 'laporan_rpjp'
-	);
+    -- Legal decision document types
+    'ba_tata_batas',
+    'sk_penunjukan',
+    'sk_penetapan',
+    'sk_penunjukan_parsial',
+    -- Zoning block document types
+    'penataan_blok',
+    'konsultasi_publik',
+    'evaluasi_blok',
+    'evaluasi_konsultasi',
+    -- Planning document types
+    'dokumen_rpjp',
+    'evaluasi_rpjp',
+    'laporan_rpjp'
+);
+```
 
+### Recovery & Damage Types
+
+```sql
 CREATE TYPE recovery_damage_level AS ENUM (
-	'ringan', 'berat'
-	);
+    'ringan',
+    'berat'
+);
 
 CREATE TYPE damage_cause AS ENUM (
-    'perambahan', 'pembangunan_strategis_tak_terelakan', 'pembangunan_non_prosedural'
-	);
+    'perambahan',
+    'pembangunan_strategis_tak_terelakan',
+    'pembangunan_non_prosedural'
+);
 
 CREATE TYPE recovery_action AS ENUM (
-	'mekanisme_alam', 'restorasi'
-	);
+    'mekanisme_alam',
+    'restorasi'
+);
+```
 
+### Assessment Categories
+
+```sql
 CREATE TYPE assessment_category AS ENUM (
-	'efektif', 'tidak_efektif', 'belum_dilakukan_penilaian'
-	);
+    'efektif',
+    'tidak_efektif',
+    'belum_dilakukan_penilaian'
+);
+```
 
-CREATE TYPE certivicate_right AS ENUM (
-	'hak_milik', 'hak_pakai', 'hak_guna_bangunan', 'tidak_ada_sertifikat', 'tanah_kosong'
-	);
+### Certificate Rights
 
+```sql
+CREATE TYPE certificate_right AS ENUM (
+    'hak_milik',
+    'hak_pakai',
+    'hak_guna_bangunan',
+    'tidak_ada_sertifikat',
+    'tanah_kosong'
+);
+```
+
+### Build-up Types & Status
+
+```sql
 CREATE TYPE buildup_subject_type AS ENUM (
-	'masyarakat', 'instansi_pemerintah', 'perusahaan', 'kth'
-	);
+    'masyarakat',
+    'instansi_pemerintah',
+    'perusahaan',
+    'kth'
+);
 
 CREATE TYPE buildup_status AS ENUM (
-	'aktif', 'mediasi', 'eskalasi', 'koordinasi', 'terselesaikan'
-	);
+    'aktif',
+    'mediasi',
+    'eskalasi',
+    'koordinasi',
+    'terselesaikan'
+);
+```
 
+### Action Log Types
+
+```sql
 CREATE TYPE logs_action_type AS ENUM (
-	'create', 'update', 'delete','restore','login','logout', 'export'
-	);
+    'create',
+    'update',
+    'delete',
+    'restore',
+    'login',
+    'logout',
+    'export'
+);
 ```
 
 ---
 
-## Performance and Indexing
+## ⚡ Performance and Indexing
+
+### User Table Indexing
 
 ```sql
--- user table indexing
-CREATE INDEX idx_account_user_id ON vogelkop_accounts(user_ID)
-CREATE INDEX idx_session_user_id ON vogelkop_session(user_ID)
+CREATE INDEX idx_account_user_id ON vogelkop_accounts(user_ID);
+CREATE INDEX idx_session_user_id ON vogelkop_session(user_ID);
+```
 
--- foreign key indexing
+### Foreign Key Indexing
+
+```sql
 CREATE INDEX idx_area_decisions_area_id ON vogelkop_area_decisions(area_ID);
 CREATE INDEX idx_area_functions_area_id ON vogelkop_area_functions(area_ID);
 CREATE INDEX idx_area_locations_area_id ON vogelkop_area_locations(area_ID);
@@ -416,57 +562,73 @@ CREATE INDEX idx_area_planning_area_id ON vogelkop_area_planning(area_ID);
 CREATE INDEX idx_ecosistem_recoveries_area_id ON vogelkop_ecosistem_recoveries(area_ID);
 CREATE INDEX idx_buildup_area_id ON vogelkop_build_up_areas(area_ID);
 CREATE INDEX idx_certificate_area_id ON vogelkop_certificate_in_area(area_ID);
+```
 
--- business logic optimization
+### Business Logic Optimization
+
+```sql
 CREATE INDEX idx_conservation_area_active ON vogelkop_areas(is_active);
 CREATE INDEX idx_conservation_area_name ON vogelkop_areas(area_name);
 CREATE INDEX idx_planning_status ON vogelkop_planning(plan_status);
-CREATE INDEX idx_cretificate_status ON vogelkop_cretificate_in_area(certificate_status);
+CREATE INDEX idx_certificate_status ON vogelkop_certificate_in_area(certificate_status);
 CREATE INDEX idx_buildup_status ON vogelkop_build_up_areas(buildup_status);
-
--- logs indexing
-CREATE INDEX idx_logs_created_at ON vogelkop_activity_logs(create_at DESC);
-CREATE INDEX idx_logs_entity ON vogelkop_activity_logs(entity_table, entity_ID);
-CREATE INDEX idx_logs_user ON vogelkop_activity_logs(user_id);
-
 ```
 
+### Activity Logs Indexing
+
+```sql
+CREATE INDEX idx_logs_created_at ON vogelkop_activity_logs(created_at DESC);
+CREATE INDEX idx_logs_entity ON vogelkop_activity_logs(entity_table, entity_ID);
+CREATE INDEX idx_logs_user ON vogelkop_activity_logs(user_id);
+```
+
+### 📈 Performance Guidelines
+
+| Strategy                  | Recommendation                                    |
+| ------------------------- | ------------------------------------------------- |
+| 🔍 **Query Optimization** | Use appropriate indexes for common query patterns |
+| 📦 **Data Archiving**     | Implement archiving strategy for historical data  |
+| 🔌 **Connection Pooling** | Configure database connection pooling             |
+| 📊 **Monitoring**         | Regular performance monitoring and optimization   |
+
 ---
 
-### Performance Guidelines
+## 📚 Documentation
 
-- **Query Optimization**: Use appropriate indexes for common query patterns
-- **Data Archiving**: Implement archiving strategy for historical data
-- **Connection Pooling**: Configure database connection pooling
-- **Monitoring**: Regular performance monitoring and optimization
+### 📜 Version History
 
----
+| Version | Changes                                                                            |
+| :-----: | ---------------------------------------------------------------------------------- |
+| **2.1** | Added `activity_logs` table for logging                                            |
+| **2.0** | Added Authentication table group                                                   |
+| **1.1** | Added note for relative path in document storage                                   |
+| **1.0** | Initial conservation core data table with planning domain and performance indexing |
 
-## Documentation
+### 🔧 Maintenance
 
-### Version History
+> [!TIP]
+> This design should be updated when:
+>
+> - New data sources are integrated
+> - Schema changes are required
+> - Business rules evolve
+> - Performance optimization is needed
 
-version 2.1 : add activity logs table for loggings
-version 2.0 : add new table group -> Authentication
-version 1.1 : add note to the document path to use relative path
-version **1.0** : initial conservation core data table with planning data domain table, and performance indexing
-
-### Maintenance
-
-This design should be updated when:
-
-- New data sources are integrated
-- Schema changes are required
-- Business rules evolve
-- Performance optimization is needed
-
-### Support
+### 💬 Support
 
 For questions about this database design:
 
-- Review this documentation first
-- Check the source CSV files for data understanding
-- Validate against business requirements
-- Update documentation with any changes
+1. 📖 Review this documentation first
+2. 📊 Check the source CSV files for data understanding
+3. ✅ Validate against business requirements
+4. 📝 Update documentation with any changes
 
 ---
+
+<div align="center">
+
+**Vogelkop Data Center** • Database Design Document
+
+_Balai Besar KSDA Papua Barat Daya_
+
+</div>
