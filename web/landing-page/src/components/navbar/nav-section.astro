@@ -6,8 +6,9 @@ interface Props {
 const { title } = Astro.props;
 ---
 
-<section class="space-y-4">
-  <header class="flex items-center justify-between mb-2 min-h-[40px]">
+<section class="flex justify-between">
+  <div class="space-y-4">
+  <header class="flex justify-between items-start mb-2 min-h-[40px]">
     <div class="flex items-center gap-2">
       <span class="relative flex h-2 w-2" aria-hidden="true">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#3b49df] opacity-75"></span>
@@ -15,9 +16,10 @@ const { title } = Astro.props;
       </span>
       <h2 class="text-xs font-bold tracking-widest uppercase">{title}</h2>
     </div>
-    <slot name="right" />
   </header>
-  <div class="space-y-2">
-    <slot />
+    <div class="space-y-2">
+      <slot />
+    </div>
   </div>
+  <slot name="right" />
 </section>

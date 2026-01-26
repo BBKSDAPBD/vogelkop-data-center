@@ -1,12 +1,12 @@
 ---
 import logo from '@/assets/Logo.png';
 import { Image } from 'astro:assets';
+import { ThemeSwitcher } from '../optics/theme-switcher';
 import { Button } from '../ui/button';
-import { ModeToggle } from './ModeToggle';
-import NavSection from './NavSection.astro';
+import NavSection from './nav-section.astro';
 ---
 
-<nav class="w-full py-8 px-6 font-sans border-b border-white/10" aria-label="Main Navigation">
+<nav class="w-full py-8 px-6 font-sans" aria-label="Main Navigation">
   <div class="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-7 gap-4">
     
     <!-- logo Column -->
@@ -87,7 +87,6 @@ import NavSection from './NavSection.astro';
 
     <!-- Connect Column -->
     <NavSection title="Connect">
-      <ModeToggle slot="right" client:load />
       <address class="flex flex-col gap-6 not-italic">
         <ul class="text-sm space-y-1.5 list-none p-0 m-0 opacity-80">
           <li><a href="#" class="hover:text-muted-foreground transition-colors">Instagram</a></li>
@@ -110,6 +109,7 @@ import NavSection from './NavSection.astro';
           </div>
         </div>
       </address>
+        <ThemeSwitcher client:load slot="right" />
     </NavSection>
   </div>
 </nav>
