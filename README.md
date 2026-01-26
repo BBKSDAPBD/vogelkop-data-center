@@ -146,6 +146,6 @@ For inquiries regarding data access or partnerships, please contact the project 
 
 ---
 
-<sub>Made with ❤️ for conservation in West Papua</sub>
+<sub>Made with ❤️ for conservation in Vogelkop Peninsula</sub>
 
 </div>
