@@ -1,6 +1,7 @@
 ---
 import "@/styles/global.css";
 import Navbar from "@/components/navbar/Navbar.astro";
+import PageLoader from "@/components/page-loader.astro";
 ---
 <!doctype html>
 <html lang="en">
@@ -13,6 +14,7 @@ import Navbar from "@/components/navbar/Navbar.astro";
 		<title>Balai Besar KSDA Papua Barat Daya</title>
 	</head>
 	<body>
+		<PageLoader />
 		<Navbar />
 		<slot />
 	</body>

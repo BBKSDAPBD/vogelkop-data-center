@@ -1,0 +1,111 @@
+---
+/**
+ * Minimalist page loader component
+ * Displays a subtle loading animation during page load
+ * Automatically hides when the page is fully loaded
+ */
+---
+
+<div id="page-loader" class="page-loader" aria-hidden="true">
+  <div class="loader-content">
+    <div class="loader-bar"></div>
+  </div>
+</div>
+
+<style>
+  .page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--background);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+  }
+
+  .page-loader.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .loader-bar {
+    width: 120px;
+    height: 2px;
+    background-color: var(--muted);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .loader-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 40%;
+    background-color: var(--primary);
+    border-radius: 2px;
+    animation: loading-slide 1.2s ease-in-out infinite;
+  }
+
+  @keyframes loading-slide {
+    0% {
+      left: -40%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .loader-bar::after {
+      animation: loading-pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes loading-pulse {
+      0%, 100% {
+        opacity: 0.3;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+  }
+</style>
+
+<script is:inline>
+  // Hide loader when page is fully loaded
+  window.addEventListener('load', () => {
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+      // Wait 2 seconds then hide and dispatch event
+      setTimeout(() => {
+        loader.classList.add('hidden');
+        // Dispatch custom event for other components to start their animations
+        window.dispatchEvent(new CustomEvent('pageLoaderComplete'));
+      }, 2000);
+    }
+  });
+
+  // Fallback: Hide loader after maximum wait time
+  setTimeout(() => {
+    const loader = document.getElementById('page-loader');
+    if (loader && !loader.classList.contains('hidden')) {
+      loader.classList.add('hidden');
+      window.dispatchEvent(new CustomEvent('pageLoaderComplete'));
+    }
+  }, 5000);
+</script>

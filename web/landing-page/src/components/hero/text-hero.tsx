@@ -1,54 +1,109 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "motion/react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const texts = [
-    "Menjaga denyut -- nadi Biodiversitas endemik Papua Barat Daya demi masa depan alam yang tetap terjaga.",
-    "Mengelola kawasan konservasi secara berkelanjutan melalui sinergi data dan aksi nyata di lapangan.",
-    "Memberikan layanan informasi dan perizinan yang transparan demi kolaborasi lestari bersama masyarakat.",
+    "Menjaga denyut -- Nadi **Biodiversitas** endemik Papua Barat Daya demi masa depan alam yang tetap terjaga.",
+    "Mengelola kawasan **Konservasi** secara berkelanjutan melalui sinergi data dan aksi nyata di lapangan.",
+    "Memberikan layanan informasi dan perizinan yang transparan demi kolaborasi lestari bersama **Masyarakat.**",
 ];
+
+/**
+ * Hook to wait for the page loader to complete before starting animations
+ */
+function useLoaderComplete() {
+    const [isLoaderComplete, setIsLoaderComplete] = useState(false);
+
+    useEffect(() => {
+        // Check if loader already completed (for late-mounting components)
+        const loader = document.getElementById("page-loader");
+        if (loader?.classList.contains("hidden")) {
+            setIsLoaderComplete(true);
+            return;
+        }
+
+        function handleLoaderComplete() {
+            setIsLoaderComplete(true);
+        }
+
+        window.addEventListener("pageLoaderComplete", handleLoaderComplete);
+        return () => {
+            window.removeEventListener(
+                "pageLoaderComplete",
+                handleLoaderComplete,
+            );
+        };
+    }, []);
+
+    return isLoaderComplete;
+}
 
 function AnimatedWordOnLoad({
     word,
     wordIndex,
     totalWords,
     scrollYProgress,
+    isLoaderComplete,
 }: {
     word: string;
     wordIndex: number;
     totalWords: number;
     scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
+    isLoaderComplete: boolean;
 }) {
+    const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
+
+    // Check if word is highlighted (wrapped in **)
+    const isHighlighted = word.startsWith("**") && word.endsWith("**");
+    const displayWord = isHighlighted ? word.slice(2, -2) : word;
+
     // Staggered fade out: each word fades out at slightly different times
     const fadeOutStart = 0.3 + (wordIndex / totalWords) * 0.15;
     const fadeOutEnd = fadeOutStart + 0.05;
 
-    const opacity = useTransform(
+    const scrollOpacity = useTransform(
         scrollYProgress,
         [fadeOutStart, fadeOutEnd],
         [1, 0],
     );
-    const y = useTransform(
+    const scrollY = useTransform(
         scrollYProgress,
         [fadeOutStart, fadeOutEnd],
         ["0%", "100%"],
     );
 
+    const highlightStyles = isHighlighted
+        ? "text-primary underline decoration-dotted underline-offset-4"
+        : "";
+
     return (
         <span className="overflow-hidden inline-block mr-[0.25em]">
             <motion.span
-                className="inline-block"
+                className={`inline-block ${highlightStyles}`}
                 initial={{ y: "100%", opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
+                animate={
+                    isLoaderComplete
+                        ? { y: 0, opacity: 1 }
+                        : { y: "100%", opacity: 0 }
+                }
                 transition={{
                     duration: 0.5,
                     delay: wordIndex * 0.04,
                     ease: [0.25, 0.46, 0.45, 0.94],
                 }}
-                style={{ opacity, y }}
+                onAnimationComplete={() => {
+                    if (isLoaderComplete) {
+                        setHasAnimatedIn(true);
+                    }
+                }}
+                style={
+                    hasAnimatedIn
+                        ? { opacity: scrollOpacity, y: scrollY }
+                        : undefined
+                }
             >
-                {word}
+                {displayWord}
             </motion.span>
         </span>
     );
@@ -69,6 +124,10 @@ function AnimatedWordOnScroll({
     fadeOutStart: number;
     fadeOutEnd: number;
 }) {
+    // Check if word is highlighted (wrapped in **)
+    const isHighlighted = word.startsWith("**") && word.endsWith("**");
+    const displayWord = isHighlighted ? word.slice(2, -2) : word;
+
     const yIn = useTransform(
         scrollYProgress,
         [startOffset, endOffset],
@@ -110,10 +169,17 @@ function AnimatedWordOnScroll({
         return 1;
     });
 
+    const highlightStyles = isHighlighted
+        ? "text-primary underline decoration-dotted underline-offset-4"
+        : "";
+
     return (
         <span className="overflow-hidden inline-block mr-[0.25em]">
-            <motion.span className="inline-block" style={{ y, opacity }}>
-                {word}
+            <motion.span
+                className={`inline-block ${highlightStyles}`}
+                style={{ y, opacity }}
+            >
+                {displayWord}
             </motion.span>
         </span>
     );
@@ -123,10 +189,12 @@ function AnimatedTextOnLoad({
     text,
     scrollYProgress,
     className = "",
+    isLoaderComplete,
 }: {
     text: string;
     scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
     className?: string;
+    isLoaderComplete: boolean;
 }) {
     const words = text.split(" ");
     const totalWords = words.length;
@@ -140,6 +208,7 @@ function AnimatedTextOnLoad({
                     wordIndex={wordIndex}
                     totalWords={totalWords}
                     scrollYProgress={scrollYProgress}
+                    isLoaderComplete={isLoaderComplete}
                 />
             ))}
         </h3>
@@ -203,6 +272,7 @@ function AnimatedTextOnScroll({
 
 export function TextHero() {
     const containerRef = useRef<HTMLDivElement>(null);
+    const isLoaderComplete = useLoaderComplete();
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ["start start", "end end"],
@@ -217,6 +287,7 @@ export function TextHero() {
                             text={texts[0]}
                             scrollYProgress={scrollYProgress}
                             className="text-hero"
+                            isLoaderComplete={isLoaderComplete}
                         />
                     </div>
                     {texts.slice(1).map((text, index) => (

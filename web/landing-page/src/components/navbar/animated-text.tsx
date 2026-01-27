@@ -1,7 +1,37 @@
 "use client";
 
 import { motion } from "motion/react";
-import type { ElementType } from "react";
+import { type ElementType, useEffect, useState } from "react";
+
+/**
+ * Hook to wait for the page loader to complete before starting animations
+ */
+function useLoaderComplete() {
+    const [isLoaderComplete, setIsLoaderComplete] = useState(false);
+
+    useEffect(() => {
+        // Check if loader already completed (for late-mounting components)
+        const loader = document.getElementById("page-loader");
+        if (loader?.classList.contains("hidden")) {
+            setIsLoaderComplete(true);
+            return;
+        }
+
+        function handleLoaderComplete() {
+            setIsLoaderComplete(true);
+        }
+
+        window.addEventListener("pageLoaderComplete", handleLoaderComplete);
+        return () => {
+            window.removeEventListener(
+                "pageLoaderComplete",
+                handleLoaderComplete,
+            );
+        };
+    }, []);
+
+    return isLoaderComplete;
+}
 
 interface AnimatedTextProps {
     text: string;
@@ -17,6 +47,7 @@ export function AnimatedText({
     delay = 0,
 }: AnimatedTextProps) {
     const words = text.split(" ");
+    const isLoaderComplete = useLoaderComplete();
 
     return (
         <Tag className={`inline-flex flex-wrap ${className}`}>
@@ -28,7 +59,11 @@ export function AnimatedText({
                     <motion.span
                         className="inline-block"
                         initial={{ y: "100%", opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
+                        animate={
+                            isLoaderComplete
+                                ? { y: 0, opacity: 1 }
+                                : { y: "100%", opacity: 0 }
+                        }
                         transition={{
                             duration: 0.5,
                             delay: delay + wordIndex * 0.04,
