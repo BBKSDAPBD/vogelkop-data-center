@@ -2,6 +2,7 @@
 
 import { motion, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { Marquee } from "./marquee";
 
 const texts = [
     "Menjaga denyut -- Nadi **Biodiversitas** endemik Papua Barat Daya demi masa depan alam yang tetap terjaga.",
@@ -300,6 +301,7 @@ export function TextHero() {
                         </div>
                     ))}
                 </div>
+                <Marquee />
             </div>
         </div>
     );
