@@ -45,7 +45,13 @@ export function Marquee() {
             gsap.fromTo(
                 wrapperRef.current,
                 { y: 100, opacity: 0 },
-                { y: 0, opacity: 1, duration: 1, ease: "power3.out" },
+                {
+                    y: 0,
+                    opacity: 1,
+                    duration: 1,
+                    ease: "power3.out",
+                    delay: 0.5,
+                },
             );
         }
 
@@ -146,7 +152,7 @@ export function Marquee() {
                         key={`a-${i}`}
                         src={img.src}
                         alt=""
-                        className="h-44 w-80 shrink-0 object-cover rounded-lg grayscale sepia-[0.4] hue-rotate-[90deg] brightness-75 transition-all duration-300 hover:grayscale-0 hover:sepia-0 hover:hue-rotate-0 hover:brightness-100 hover:scale-105"
+                        className="h-44 w-80 shrink-0 object-cover rounded-lg grayscale transition-all duration-300 hover:grayscale-0 hover:sepia-0 hover:hue-rotate-0 hover:brightness-100 hover:scale-105"
                     />
                 ))}
                 {images.map((img, i) => (
@@ -154,7 +160,7 @@ export function Marquee() {
                         key={`b-${i}`}
                         src={img.src}
                         alt=""
-                        className="h-44 w-80 shrink-0 object-cover rounded-lg grayscale sepia-[0.4] hue-rotate-[90deg] brightness-75 transition-all duration-300 hover:grayscale-0 hover:sepia-0 hover:hue-rotate-0 hover:brightness-100 hover:scale-105"
+                        className="h-44 w-80 shrink-0 object-cover rounded-lg grayscale transition-all duration-300 hover:grayscale-0 hover:sepia-0 hover:hue-rotate-0 hover:brightness-100 hover:scale-105"
                     />
                 ))}
             </div>

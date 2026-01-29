@@ -1,14 +1,61 @@
 ---
 /**
- * Minimalist page loader component
- * Displays a subtle loading animation during page load
- * Automatically hides when the page is fully loaded
+ * Page loader component with animated dots
+ * Dots are centered on screen with percentage labels
+ * Dots become colored when progress reaches their threshold
+ * Labels animate to navbar titles when sliding up
  */
+
+const navTitles = ["Intro", "Profile", "Organisasi", "Data & Informasi", "Kawasan & Pelayanan", "Connect"];
 ---
 
 <div id="page-loader" class="page-loader" aria-hidden="true">
+  <!-- Loader content wrapper (slides up together) -->
   <div class="loader-content">
-    <div class="loader-bar"></div>
+    <!-- Dots with percentage labels that change to titles -->
+    <div class="dots-row">
+      <div class="dot-item" data-threshold="0" data-title={navTitles[0]}>
+        <span class="dot"></span>
+        <span class="dot-label">
+          <span class="label-text">0%</span>
+        </span>
+      </div>
+      <div class="dot-item" data-threshold="20" data-title={navTitles[1]}>
+        <span class="dot"></span>
+        <span class="dot-label">
+          <span class="label-text">20%</span>
+        </span>
+      </div>
+      <div class="dot-item" data-threshold="40" data-title={navTitles[2]}>
+        <span class="dot"></span>
+        <span class="dot-label">
+          <span class="label-text">40%</span>
+        </span>
+      </div>
+      <div class="dot-item" data-threshold="60" data-title={navTitles[3]}>
+        <span class="dot"></span>
+        <span class="dot-label">
+          <span class="label-text">60%</span>
+        </span>
+      </div>
+      <div class="dot-item" data-threshold="80" data-title={navTitles[4]}>
+        <span class="dot"></span>
+        <span class="dot-label">
+          <span class="label-text">80%</span>
+        </span>
+      </div>
+      <div class="dot-item" data-threshold="100" data-title={navTitles[5]}>
+        <span class="dot"></span>
+        <span class="dot-label">
+          <span class="label-text">100%</span>
+        </span>
+      </div>
+    </div>
+    
+    <!-- Progress bar directly under dots -->
+    <div class="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
   </div>
 </div>
 
@@ -18,12 +65,13 @@
     inset: 0;
     z-index: 9999;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
     background-color: var(--background);
     opacity: 1;
     visibility: visible;
-    transition: opacity 0.4s ease, visibility 0.4s ease;
+    transition: opacity 0.4s ease 0.3s, visibility 0.4s ease 0.3s;
   }
 
   .page-loader.hidden {
@@ -36,76 +84,275 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    width: 100%;
+    max-width: 1600px;
+    padding: 0 1rem;
   }
 
-  .loader-bar {
-    width: 120px;
-    height: 2px;
+  /* Dots row - matches navbar grid exactly */
+  .dots-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem; /* matches gap-4 */
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .dot-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* matches gap-2 */
+    opacity: 0;
+    transform: translateY(10px);
+    animation: dot-appear 0.4s ease-out forwards;
+  }
+
+  /* Staggered dot appearance */
+  .dot-item:nth-child(1) { animation-delay: 0.1s; }
+  .dot-item:nth-child(2) { animation-delay: 0.15s; }
+  .dot-item:nth-child(3) { animation-delay: 0.2s; }
+  .dot-item:nth-child(4) { animation-delay: 0.25s; }
+  .dot-item:nth-child(5) { animation-delay: 0.3s; }
+  .dot-item:nth-child(6) { animation-delay: 0.35s; }
+
+  @keyframes dot-appear {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .dot {
+    position: relative;
+    display: inline-flex;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
     background-color: var(--muted);
-    border-radius: 2px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  /* Active dot state */
+  .dot-item.active .dot {
+    background-color: var(--primary);
+    box-shadow: 0 0 8px var(--primary);
+  }
+
+  /* Ping effect only on active dots */
+  .dot-item.active .dot::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background-color: var(--primary);
+    animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  @keyframes ping {
+    75%, 100% {
+      transform: scale(2.5);
+      opacity: 0;
+    }
+  }
+
+  .dot-label {
+    font-size: 0.75rem; /* text-xs */
+    letter-spacing: 0.1em; /* tracking-widest */
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    transition: color 0.3s ease;
     overflow: hidden;
+    height: 1.2em;
+    margin-top: -6px; /* align with navbar title */
+  }
+
+  .label-text {
+    display: inline-block;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  .dot-item.active .dot-label {
+    color: var(--foreground);
+  }
+
+  /* Label text change animation */
+  .dot-item.changing .label-text {
+    animation: text-swap 0.4s ease forwards;
+  }
+
+  @keyframes text-swap {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    40% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    60% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Progress bar - under dots, same width */
+  .progress-container {
+    width: 100%;
+    height: 1px;
+    background-color: var(--muted);
+    margin-top: 0.75rem;
     position: relative;
   }
 
-  .loader-bar::after {
-    content: '';
+  .progress-bar {
     position: absolute;
     top: 0;
     left: 0;
     height: 100%;
-    width: 40%;
+    width: 0%;
     background-color: var(--primary);
-    border-radius: 2px;
-    animation: loading-slide 1.2s ease-in-out infinite;
+    transition: width 0.1s linear;
   }
 
-  @keyframes loading-slide {
+  /* Loader content slides up when complete - faster */
+  .page-loader.complete .loader-content {
+    animation: dots-slide-up 1s ease-out forwards;
+  }
+
+  @keyframes dots-slide-up {
     0% {
-      left: -40%;
+      transform: translateY(0);
     }
     100% {
-      left: 100%;
+      /* Slide up to navbar position (centered -> top with padding) */
+      transform: translateY(calc(-50vh + 2rem));
+    }
+  }
+
+  /* Hide progress bar when complete */
+  .page-loader.complete .progress-container {
+    animation: fade-out 0.3s ease-out forwards;
+  }
+
+  @keyframes fade-out {
+    to {
+      opacity: 0;
     }
   }
 
   /* Respect reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
-    .loader-bar::after {
-      animation: loading-pulse 1.5s ease-in-out infinite;
+    .dot-item.active .dot::before {
+      animation: none;
     }
+    
+    .dot-item {
+      animation-duration: 0.2s;
+    }
+    
+    .page-loader.complete .loader-content {
+      animation-duration: 0.5s;
+    }
+  }
 
-    @keyframes loading-pulse {
-      0%, 100% {
-        opacity: 0.3;
-      }
-      50% {
-        opacity: 1;
-      }
+  /* Responsive */
+  @media (max-width: 768px) {
+    .dots-row {
+      padding: 0 0.5rem;
+    }
+    
+    .dot-label {
+      font-size: 0.625rem;
+    }
+    
+    .dot {
+      width: 6px;
+      height: 6px;
     }
   }
 </style>
 
 <script is:inline>
-  // Hide loader when page is fully loaded
-  window.addEventListener('load', () => {
+  (function() {
+    const DURATION = 2000; // Total loading duration in ms
+    const startTime = Date.now();
+    const progressBar = document.getElementById('progress-bar');
+    const dotItems = document.querySelectorAll('.dot-item');
     const loader = document.getElementById('page-loader');
-    if (loader) {
-      // Wait 2 seconds then hide and dispatch event
-      setTimeout(() => {
-        loader.classList.add('hidden');
-        // Dispatch custom event for other components to start their animations
-        window.dispatchEvent(new CustomEvent('pageLoaderComplete'));
-      }, 2000);
+    
+    function updateProgress() {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(100, (elapsed / DURATION) * 100);
+      
+      // Update progress bar
+      if (progressBar) {
+        progressBar.style.width = progress + '%';
+      }
+      
+      // Update dot active states based on progress
+      dotItems.forEach(item => {
+        const threshold = parseInt(item.dataset.threshold, 10);
+        if (progress >= threshold) {
+          item.classList.add('active');
+        }
+      });
+      
+      // Continue until complete
+      if (progress < 100) {
+        requestAnimationFrame(updateProgress);
+      } else {
+        // Loading complete - animate label text change with stagger
+        dotItems.forEach((item, index) => {
+          const labelText = item.querySelector('.label-text');
+          const title = item.dataset.title;
+          
+          setTimeout(() => {
+            item.classList.add('changing');
+            
+            // Change text at midpoint of animation
+            setTimeout(() => {
+              if (labelText && title) {
+                labelText.textContent = title;
+              }
+            }, 160);
+          }, index * 50); // Stagger delay
+        });
+        
+        // Start slide up after text change
+        setTimeout(() => {
+          if (loader) {
+            loader.classList.add('complete');
+            
+            setTimeout(() => {
+              loader.classList.add('hidden');
+              window.dispatchEvent(new CustomEvent('pageLoaderComplete'));
+            }, 1000); // Matches faster animation duration
+          }
+        }, 400);
+      }
     }
-  });
-
-  // Fallback: Hide loader after maximum wait time
-  setTimeout(() => {
-    const loader = document.getElementById('page-loader');
-    if (loader && !loader.classList.contains('hidden')) {
-      loader.classList.add('hidden');
-      window.dispatchEvent(new CustomEvent('pageLoaderComplete'));
-    }
-  }, 5000);
+    
+    // Start progress animation
+    requestAnimationFrame(updateProgress);
+    
+    // Fallback: Force complete after max wait
+    setTimeout(() => {
+      if (loader && !loader.classList.contains('hidden')) {
+        loader.classList.add('complete');
+        setTimeout(() => {
+          loader.classList.add('hidden');
+          window.dispatchEvent(new CustomEvent('pageLoaderComplete'));
+        }, 1000);
+      }
+    }, 5000);
+  })();
 </script>
