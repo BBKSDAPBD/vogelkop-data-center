@@ -6,20 +6,65 @@ interface Props {
 const { title } = Astro.props;
 ---
 
-<section class="flex justify-between">
-  <div class="space-y-4">
-  <header class="flex justify-between items-start mb-2 min-h-[40px]">
-    <div class="flex items-center gap-2">
-      <span class="relative flex h-2 w-2" aria-hidden="true">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#3b49df] opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-[#3b49df] shadow-[0_0_8px_#3b49df]"></span>
-      </span>
-      <h2 class="text-xs font-bold tracking-widest uppercase">{title}</h2>
-    </div>
+<div role="group" aria-labelledby={`nav-section-${title.toLowerCase().replace(/\s+/g, '-')}`} class="flex flex-col">
+  <!-- Section header with status dot -->
+  <header class="flex items-center gap-2 mb-3">
+    <span class="nav-dot relative mt-1 flex h-2 w-2 opacity-0" aria-hidden="true">
+      <span class="ping-effect absolute inline-flex h-full w-full rounded-full bg-primary"></span>
+      <span class="relative inline-flex rounded-full h-2 w-2 bg-primary shadow-[0_0_8px_primary]"></span>
+    </span>
+    <h2 
+      id={`nav-section-${title.toLowerCase().replace(/\s+/g, '-')}`}
+      class="text-xs tracking-widest uppercase"
+    >
+      {title}
+    </h2>
   </header>
+  
+  <!-- Section content -->
+  <div class="flex justify-between flex-1">
     <div class="space-y-2">
       <slot />
     </div>
+    <slot name="right" />
   </div>
-  <slot name="right" />
-</section>
+</div>
+
+<style>
+  .nav-dot {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .nav-dot.visible {
+    opacity: 1;
+  }
+
+  .nav-dot.visible .ping-effect {
+    animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  @keyframes ping {
+    75%, 100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  // Show navbar dots after page loader completes
+  function showNavDots() {
+    document.querySelectorAll('.nav-dot').forEach(dot => {
+      dot.classList.add('visible');
+    });
+  }
+
+  // Check if loader already completed
+  const loader = document.getElementById('page-loader');
+  if (loader?.classList.contains('hidden')) {
+    showNavDots();
+  } else {
+    window.addEventListener('pageLoaderComplete', showNavDots, { once: true });
+  }
+</script>

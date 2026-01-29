@@ -1,6 +1,7 @@
 ---
 import "@/styles/global.css";
 import Navbar from "@/components/navbar/Navbar.astro";
+import PageLoader from "@/components/page-loader.astro";
 ---
 <!doctype html>
 <html lang="en">
@@ -13,6 +14,7 @@ import Navbar from "@/components/navbar/Navbar.astro";
 		<title>Balai Besar KSDA Papua Barat Daya</title>
 	</head>
 	<body>
+		<PageLoader />
 		<Navbar />
 		<slot />
 	</body>
@@ -36,17 +38,26 @@ import Navbar from "@/components/navbar/Navbar.astro";
 
 
 <script>
-	import Lenis from 'lenis';
+	import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Lenis from 'lenis';
+
+	gsap.registerPlugin(ScrollTrigger);
 
 	// Initialize Lenis
 	const lenis = new Lenis({
 		autoRaf: true,
+		lerp: 0.05,
+		wheelMultiplier: 0.7,
+		touchMultiplier: 1.5,
 	});
 
-	// Listen for the scroll event and log the event data
-	lenis.on('scroll', (e) => {
-		// console.log(e);
-	});
+	// Synchronize ScrollTrigger with Lenis
+	lenis.on('scroll', ScrollTrigger.update);
+
+	// Global GSAP ticker setup if needed (though autoRaf: true handles it for Lenis)
+	// If you want to use Lenis with GSAP's scrollTrigger.scrollerProxy, you'd do it here.
+	// For most cases, ScrollTrigger.update in the scroll event is sufficient.
 </script>
 
 <style is:global>

@@ -173,7 +173,7 @@ export const ThemeSwitcher = forwardRef(
                         >
                             {isActive && (
                                 <motion.div
-                                    className="absolute inset-0 bg-secondary"
+                                    className="absolute inset-0 bg-primary-foreground"
                                     layoutId="activeTheme"
                                     transition={{
                                         type: "spring",
