@@ -6,23 +6,29 @@ interface Props {
 const { title } = Astro.props;
 ---
 
-<section class="flex flex-col">
-  <!-- Nav dot aligned to start of grid cell -->
-  <div class="flex items-center gap-2 mb-3">
+<div role="group" aria-labelledby={`nav-section-${title.toLowerCase().replace(/\s+/g, '-')}`} class="flex flex-col">
+  <!-- Section header with status dot -->
+  <header class="flex items-center gap-2 mb-3">
     <span class="nav-dot relative mt-1 flex h-2 w-2 opacity-0" aria-hidden="true">
       <span class="ping-effect absolute inline-flex h-full w-full rounded-full bg-primary"></span>
       <span class="relative inline-flex rounded-full h-2 w-2 bg-primary shadow-[0_0_8px_primary]"></span>
     </span>
-    <h2 class="text-xs tracking-widest uppercase">{title}</h2>
-  </div>
+    <h2 
+      id={`nav-section-${title.toLowerCase().replace(/\s+/g, '-')}`}
+      class="text-xs tracking-widest uppercase"
+    >
+      {title}
+    </h2>
+  </header>
   
+  <!-- Section content -->
   <div class="flex justify-between flex-1">
     <div class="space-y-2">
       <slot />
     </div>
     <slot name="right" />
   </div>
-</section>
+</div>
 
 <style>
   .nav-dot {

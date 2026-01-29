@@ -1,63 +1,55 @@
 "use client";
 
+import { useLoaderComplete } from "@/hooks/use-loader-complete";
 import { motion, useScroll, useTransform } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Marquee } from "./marquee";
 
-const texts = [
+/** Hero text content for the three columns */
+const HERO_TEXTS = [
     "Menjaga denyut -- Nadi **Biodiversitas** endemik Papua Barat Daya demi masa depan alam yang tetap terjaga.",
     "Mengelola kawasan **Konservasi** secara berkelanjutan melalui sinergi data dan aksi nyata di lapangan.",
     "Memberikan layanan informasi dan perizinan yang transparan demi kolaborasi lestari bersama **Masyarakat.**",
-];
+] as const;
+
+/** Animation timing constants */
+const ANIMATION = {
+    wordDuration: 0.5,
+    wordStagger: 0.04,
+    easing: [0.25, 0.46, 0.45, 0.94] as const,
+} as const;
 
 /**
- * Hook to wait for the page loader to complete before starting animations
+ * Parses text for highlighted words (wrapped in **).
+ * Returns the display text and whether it's highlighted.
  */
-function useLoaderComplete() {
-    const [isLoaderComplete, setIsLoaderComplete] = useState(false);
-
-    useEffect(() => {
-        // Check if loader already completed (for late-mounting components)
-        const loader = document.getElementById("page-loader");
-        if (loader?.classList.contains("hidden")) {
-            setIsLoaderComplete(true);
-            return;
-        }
-
-        function handleLoaderComplete() {
-            setIsLoaderComplete(true);
-        }
-
-        window.addEventListener("pageLoaderComplete", handleLoaderComplete);
-        return () => {
-            window.removeEventListener(
-                "pageLoaderComplete",
-                handleLoaderComplete,
-            );
-        };
-    }, []);
-
-    return isLoaderComplete;
+function parseHighlight(word: string) {
+    const isHighlighted = word.startsWith("**") && word.endsWith("**");
+    const displayWord = isHighlighted ? word.slice(2, -2) : word;
+    return { displayWord, isHighlighted };
 }
 
+interface AnimatedWordOnLoadProps {
+    word: string;
+    wordIndex: number;
+    totalWords: number;
+    scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
+    isLoaderComplete: boolean;
+}
+
+/**
+ * Animated word component for the initial hero text.
+ * Slides up on page load, then fades out as user scrolls.
+ */
 function AnimatedWordOnLoad({
     word,
     wordIndex,
     totalWords,
     scrollYProgress,
     isLoaderComplete,
-}: {
-    word: string;
-    wordIndex: number;
-    totalWords: number;
-    scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
-    isLoaderComplete: boolean;
-}) {
+}: AnimatedWordOnLoadProps) {
     const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
-
-    // Check if word is highlighted (wrapped in **)
-    const isHighlighted = word.startsWith("**") && word.endsWith("**");
-    const displayWord = isHighlighted ? word.slice(2, -2) : word;
+    const { displayWord, isHighlighted } = parseHighlight(word);
 
     // Staggered fade out: each word fades out at slightly different times
     const fadeOutStart = 0.3 + (wordIndex / totalWords) * 0.15;
@@ -74,14 +66,14 @@ function AnimatedWordOnLoad({
         ["0%", "100%"],
     );
 
-    const highlightStyles = isHighlighted
+    const highlightClass = isHighlighted
         ? "text-primary underline decoration-dotted underline-offset-4"
         : "";
 
     return (
         <span className="overflow-hidden inline-block mr-[0.25em]">
             <motion.span
-                className={`inline-block ${highlightStyles}`}
+                className={`inline-block ${highlightClass}`}
                 initial={{ y: "100%", opacity: 0 }}
                 animate={
                     isLoaderComplete
@@ -89,9 +81,9 @@ function AnimatedWordOnLoad({
                         : { y: "100%", opacity: 0 }
                 }
                 transition={{
-                    duration: 0.5,
-                    delay: wordIndex * 0.04,
-                    ease: [0.25, 0.46, 0.45, 0.94],
+                    duration: ANIMATION.wordDuration,
+                    delay: wordIndex * ANIMATION.wordStagger,
+                    ease: ANIMATION.easing,
                 }}
                 onAnimationComplete={() => {
                     if (isLoaderComplete) {
@@ -110,6 +102,19 @@ function AnimatedWordOnLoad({
     );
 }
 
+interface AnimatedWordOnScrollProps {
+    word: string;
+    scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
+    startOffset: number;
+    endOffset: number;
+    fadeOutStart: number;
+    fadeOutEnd: number;
+}
+
+/**
+ * Animated word component for text that appears on scroll.
+ * Slides in as user scrolls down, then fades out.
+ */
 function AnimatedWordOnScroll({
     word,
     scrollYProgress,
@@ -117,17 +122,8 @@ function AnimatedWordOnScroll({
     endOffset,
     fadeOutStart,
     fadeOutEnd,
-}: {
-    word: string;
-    scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
-    startOffset: number;
-    endOffset: number;
-    fadeOutStart: number;
-    fadeOutEnd: number;
-}) {
-    // Check if word is highlighted (wrapped in **)
-    const isHighlighted = word.startsWith("**") && word.endsWith("**");
-    const displayWord = isHighlighted ? word.slice(2, -2) : word;
+}: AnimatedWordOnScrollProps) {
+    const { displayWord, isHighlighted } = parseHighlight(word);
 
     const yIn = useTransform(
         scrollYProgress,
@@ -150,34 +146,26 @@ function AnimatedWordOnScroll({
         [1, 0],
     );
 
-    // Combine: use fade-in values until fully visible, then fade-out
     const y = useTransform(() => {
         const progress = scrollYProgress.get();
-        if (progress < endOffset) {
-            return yIn.get();
-        }
-        return yOut.get();
+        return progress < endOffset ? yIn.get() : yOut.get();
     });
 
     const opacity = useTransform(() => {
         const progress = scrollYProgress.get();
-        if (progress < endOffset) {
-            return opacityIn.get();
-        }
-        if (progress > fadeOutStart) {
-            return opacityOut.get();
-        }
+        if (progress < endOffset) return opacityIn.get();
+        if (progress > fadeOutStart) return opacityOut.get();
         return 1;
     });
 
-    const highlightStyles = isHighlighted
+    const highlightClass = isHighlighted
         ? "text-primary underline decoration-dotted underline-offset-4"
         : "";
 
     return (
         <span className="overflow-hidden inline-block mr-[0.25em]">
             <motion.span
-                className={`inline-block ${highlightStyles}`}
+                className={`inline-block ${highlightClass}`}
                 style={{ y, opacity }}
             >
                 {displayWord}
@@ -186,22 +174,28 @@ function AnimatedWordOnScroll({
     );
 }
 
+interface AnimatedTextOnLoadProps {
+    text: string;
+    scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
+    className?: string;
+    isLoaderComplete: boolean;
+}
+
+/**
+ * Container for the initial animated text column.
+ * Splits text into words and animates each with stagger.
+ */
 function AnimatedTextOnLoad({
     text,
     scrollYProgress,
     className = "",
     isLoaderComplete,
-}: {
-    text: string;
-    scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
-    className?: string;
-    isLoaderComplete: boolean;
-}) {
+}: AnimatedTextOnLoadProps) {
     const words = text.split(" ");
     const totalWords = words.length;
 
     return (
-        <h3 className={`flex flex-wrap ${className}`} data-index={0}>
+        <p className={`flex flex-wrap ${className}`} data-index={0}>
             {words.map((word, wordIndex) => (
                 <AnimatedWordOnLoad
                     key={wordIndex}
@@ -212,41 +206,44 @@ function AnimatedTextOnLoad({
                     isLoaderComplete={isLoaderComplete}
                 />
             ))}
-        </h3>
+        </p>
     );
 }
 
+interface AnimatedTextOnScrollProps {
+    text: string;
+    columnIndex: number;
+    scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
+    className?: string;
+}
+
+/**
+ * Container for scroll-triggered animated text columns.
+ * Each column appears at different scroll positions.
+ */
 function AnimatedTextOnScroll({
     text,
     columnIndex,
     scrollYProgress,
     className = "",
-}: {
-    text: string;
-    columnIndex: number;
-    scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
-    className?: string;
-}) {
+}: AnimatedTextOnScrollProps) {
     const words = text.split(" ");
     const totalWords = words.length;
 
-    // Column 1: appear 0.3-0.5, fade out 0.7-0.9
-    // Column 2: appear 0.7-0.9, stay visible
+    // Column timing: Column 1 appears 0.3-0.5, Column 2 appears 0.7-0.9
     const columnStart = columnIndex === 1 ? 0.3 : 0.7;
     const columnEnd = columnIndex === 1 ? 0.5 : 0.9;
-    const fadeOutRangeStart = columnIndex === 1 ? 0.7 : 1.1; // Column 2 doesn't fade out
+    const fadeOutRangeStart = columnIndex === 1 ? 0.7 : 1.1;
     const fadeOutRangeEnd = columnIndex === 1 ? 0.9 : 1.2;
     const columnRange = columnEnd - columnStart;
     const fadeOutRange = fadeOutRangeEnd - fadeOutRangeStart;
 
     return (
-        <h3 className={`flex flex-wrap ${className}`} data-index={columnIndex}>
+        <p className={`flex flex-wrap ${className}`} data-index={columnIndex}>
             {words.map((word, wordIndex) => {
                 const wordStart =
                     columnStart + (wordIndex / totalWords) * columnRange * 0.8;
                 const wordEnd = Math.min(wordStart + 0.03, columnEnd);
-
-                // Stagger fade out per word
                 const wordFadeOutStart =
                     fadeOutRangeStart +
                     (wordIndex / totalWords) * fadeOutRange * 0.8;
@@ -267,10 +264,14 @@ function AnimatedTextOnScroll({
                     />
                 );
             })}
-        </h3>
+        </p>
     );
 }
 
+/**
+ * Main hero text component with scroll-driven animations.
+ * Displays three columns of text that animate in sequence as user scrolls.
+ */
 export function TextHero() {
     const containerRef = useRef<HTMLDivElement>(null);
     const isLoaderComplete = useLoaderComplete();
@@ -280,18 +281,18 @@ export function TextHero() {
     });
 
     return (
-        <div ref={containerRef} className="h-[300vh] -mt-[50vh] relative">
+        <article ref={containerRef} className="h-[300vh] -mt-[50vh] relative">
             <div className="sticky top-0 h-screen p-4 pb-16 flex items-center">
                 <div className="flex gap-4 text-3xl font-medium w-full">
                     <div className="flex-1">
                         <AnimatedTextOnLoad
-                            text={texts[0]}
+                            text={HERO_TEXTS[0]}
                             scrollYProgress={scrollYProgress}
                             className="text-hero"
                             isLoaderComplete={isLoaderComplete}
                         />
                     </div>
-                    {texts.slice(1).map((text, index) => (
+                    {HERO_TEXTS.slice(1).map((text, index) => (
                         <div key={index + 1} className="flex-1">
                             <AnimatedTextOnScroll
                                 text={text}
@@ -303,6 +304,6 @@ export function TextHero() {
                 </div>
                 <Marquee />
             </div>
-        </div>
+        </article>
     );
 }

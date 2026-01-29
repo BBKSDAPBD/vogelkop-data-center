@@ -1,37 +1,8 @@
 "use client";
 
+import { useLoaderComplete } from "@/hooks/use-loader-complete";
 import { motion } from "motion/react";
-import { type ElementType, useEffect, useState } from "react";
-
-/**
- * Hook to wait for the page loader to complete before starting animations
- */
-function useLoaderComplete() {
-    const [isLoaderComplete, setIsLoaderComplete] = useState(false);
-
-    useEffect(() => {
-        // Check if loader already completed (for late-mounting components)
-        const loader = document.getElementById("page-loader");
-        if (loader?.classList.contains("hidden")) {
-            setIsLoaderComplete(true);
-            return;
-        }
-
-        function handleLoaderComplete() {
-            setIsLoaderComplete(true);
-        }
-
-        window.addEventListener("pageLoaderComplete", handleLoaderComplete);
-        return () => {
-            window.removeEventListener(
-                "pageLoaderComplete",
-                handleLoaderComplete,
-            );
-        };
-    }, []);
-
-    return isLoaderComplete;
-}
+import type { ElementType } from "react";
 
 interface AnimatedTextProps {
     text: string;
@@ -40,6 +11,10 @@ interface AnimatedTextProps {
     delay?: number;
 }
 
+/**
+ * Animated text component that reveals words with a staggered slide-up animation.
+ * Waits for the page loader to complete before starting the animation.
+ */
 export function AnimatedText({
     text,
     className = "",
@@ -84,6 +59,10 @@ interface AnimatedListItemProps {
     baseDelay?: number;
 }
 
+/**
+ * Animated list item component for navigation menus.
+ * Wraps text in an AnimatedText component with calculated delay.
+ */
 export function AnimatedListItem({
     text,
     index,

@@ -1,60 +1,54 @@
 ---
 /**
- * Page loader component with animated dots
- * Dots are centered on screen with percentage labels
- * Dots become colored when progress reaches their threshold
- * Labels animate to navbar titles when sliding up
+ * Page Loader Component
+ *
+ * Displays a loading screen with:
+ * - Animated dots that light up as progress increases
+ * - Labels that transform from percentages to navbar titles
+ * - Smooth slide-up animation to navbar position on complete
  */
 
-const navTitles = ["Intro", "Profile", "Organisasi", "Data & Informasi", "Kawasan & Pelayanan", "Connect"];
+const NAV_TITLES = [
+  "Intro",
+  "Profile",
+  "Organisasi",
+  "Data & Informasi",
+  "Kawasan & Pelayanan",
+  "Connect",
+] as const;
+
+const DOT_THRESHOLDS = [0, 20, 40, 60, 80, 100] as const;
 ---
 
-<div id="page-loader" class="page-loader" aria-hidden="true">
-  <!-- Loader content wrapper (slides up together) -->
+<div
+  id="page-loader"
+  class="page-loader"
+  role="progressbar"
+  aria-valuenow="0"
+  aria-valuemin="0"
+  aria-valuemax="100"
+  aria-label="Loading page content"
+>
   <div class="loader-content">
     <!-- Dots with percentage labels that change to titles -->
     <div class="dots-row">
-      <div class="dot-item" data-threshold="0" data-title={navTitles[0]}>
-        <span class="dot"></span>
-        <span class="dot-label">
-          <span class="label-text">0%</span>
-        </span>
-      </div>
-      <div class="dot-item" data-threshold="20" data-title={navTitles[1]}>
-        <span class="dot"></span>
-        <span class="dot-label">
-          <span class="label-text">20%</span>
-        </span>
-      </div>
-      <div class="dot-item" data-threshold="40" data-title={navTitles[2]}>
-        <span class="dot"></span>
-        <span class="dot-label">
-          <span class="label-text">40%</span>
-        </span>
-      </div>
-      <div class="dot-item" data-threshold="60" data-title={navTitles[3]}>
-        <span class="dot"></span>
-        <span class="dot-label">
-          <span class="label-text">60%</span>
-        </span>
-      </div>
-      <div class="dot-item" data-threshold="80" data-title={navTitles[4]}>
-        <span class="dot"></span>
-        <span class="dot-label">
-          <span class="label-text">80%</span>
-        </span>
-      </div>
-      <div class="dot-item" data-threshold="100" data-title={navTitles[5]}>
-        <span class="dot"></span>
-        <span class="dot-label">
-          <span class="label-text">100%</span>
-        </span>
-      </div>
+      {DOT_THRESHOLDS.map((threshold, index) => (
+        <div
+          class="dot-item"
+          data-threshold={threshold}
+          data-title={NAV_TITLES[index]}
+        >
+          <span class="dot" aria-hidden="true" />
+          <span class="dot-label">
+            <span class="label-text">{threshold}%</span>
+          </span>
+        </div>
+      ))}
     </div>
-    
-    <!-- Progress bar directly under dots -->
-    <div class="progress-container">
-      <div class="progress-bar" id="progress-bar"></div>
+
+    <!-- Progress bar -->
+    <div class="progress-track" aria-hidden="true">
+      <div class="progress-fill" id="progress-bar" />
     </div>
   </div>
 </div>
@@ -89,11 +83,11 @@ const navTitles = ["Intro", "Profile", "Organisasi", "Data & Informasi", "Kawasa
     padding: 0 1rem;
   }
 
-  /* Dots row - matches navbar grid exactly */
+  /* Dots row - matches navbar grid */
   .dots-row {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 1rem; /* matches gap-4 */
+    gap: 1rem;
     width: 100%;
     max-width: 1600px;
     margin: 0 auto;
@@ -102,7 +96,7 @@ const navTitles = ["Intro", "Profile", "Organisasi", "Data & Informasi", "Kawasa
   .dot-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem; /* matches gap-2 */
+    gap: 0.5rem;
     opacity: 0;
     transform: translateY(10px);
     animation: dot-appear 0.4s ease-out forwards;
@@ -117,11 +111,7 @@ const navTitles = ["Intro", "Profile", "Organisasi", "Data & Informasi", "Kawasa
   .dot-item:nth-child(6) { animation-delay: 0.35s; }
 
   @keyframes dot-appear {
-    0% {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    100% {
+    to {
       opacity: 1;
       transform: translateY(0);
     }
@@ -137,13 +127,11 @@ const navTitles = ["Intro", "Profile", "Organisasi", "Data & Informasi", "Kawasa
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
   }
 
-  /* Active dot state */
   .dot-item.active .dot {
     background-color: var(--primary);
     box-shadow: 0 0 8px var(--primary);
   }
 
-  /* Ping effect only on active dots */
   .dot-item.active .dot::before {
     content: '';
     position: absolute;
@@ -161,14 +149,14 @@ const navTitles = ["Intro", "Profile", "Organisasi", "Data & Informasi", "Kawasa
   }
 
   .dot-label {
-    font-size: 0.75rem; /* text-xs */
-    letter-spacing: 0.1em; /* tracking-widest */
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--muted-foreground);
     transition: color 0.3s ease;
     overflow: hidden;
     height: 1.2em;
-    margin-top: -6px; /* align with navbar title */
+    margin-top: -6px;
   }
 
   .label-text {
@@ -180,32 +168,19 @@ const navTitles = ["Intro", "Profile", "Organisasi", "Data & Informasi", "Kawasa
     color: var(--foreground);
   }
 
-  /* Label text change animation */
   .dot-item.changing .label-text {
     animation: text-swap 0.4s ease forwards;
   }
 
   @keyframes text-swap {
-    0% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-    40% {
-      transform: translateY(-100%);
-      opacity: 0;
-    }
-    60% {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
+    0% { transform: translateY(0); opacity: 1; }
+    40% { transform: translateY(-100%); opacity: 0; }
+    60% { transform: translateY(100%); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
   }
 
-  /* Progress bar - under dots, same width */
-  .progress-container {
+  /* Progress bar */
+  .progress-track {
     width: 100%;
     height: 1px;
     background-color: var(--muted);
@@ -213,7 +188,7 @@ const navTitles = ["Intro", "Profile", "Organisasi", "Data & Informasi", "Kawasa
     position: relative;
   }
 
-  .progress-bar {
+  .progress-fill {
     position: absolute;
     top: 0;
     left: 0;
@@ -223,128 +198,102 @@ const navTitles = ["Intro", "Profile", "Organisasi", "Data & Informasi", "Kawasa
     transition: width 0.1s linear;
   }
 
-  /* Loader content slides up when complete - faster */
+  /* Slide up animation */
   .page-loader.complete .loader-content {
-    animation: dots-slide-up 1s ease-out forwards;
+    animation: slide-up 1s ease-out forwards;
   }
 
-  @keyframes dots-slide-up {
-    0% {
-      transform: translateY(0);
-    }
-    100% {
-      /* Slide up to navbar position (centered -> top with padding) */
+  @keyframes slide-up {
+    to {
       transform: translateY(calc(-50vh + 2rem));
     }
   }
 
-  /* Hide progress bar when complete */
-  .page-loader.complete .progress-container {
+  .page-loader.complete .progress-track {
     animation: fade-out 0.3s ease-out forwards;
   }
 
   @keyframes fade-out {
-    to {
-      opacity: 0;
-    }
+    to { opacity: 0; }
   }
 
-  /* Respect reduced motion preference */
+  /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
-    .dot-item.active .dot::before {
-      animation: none;
-    }
-    
-    .dot-item {
-      animation-duration: 0.2s;
-    }
-    
-    .page-loader.complete .loader-content {
-      animation-duration: 0.5s;
-    }
+    .dot-item.active .dot::before { animation: none; }
+    .dot-item { animation-duration: 0.2s; }
+    .page-loader.complete .loader-content { animation-duration: 0.5s; }
   }
 
   /* Responsive */
   @media (max-width: 768px) {
-    .dots-row {
-      padding: 0 0.5rem;
-    }
-    
-    .dot-label {
-      font-size: 0.625rem;
-    }
-    
-    .dot {
-      width: 6px;
-      height: 6px;
-    }
+    .dots-row { padding: 0 0.5rem; }
+    .dot-label { font-size: 0.625rem; }
+    .dot { width: 6px; height: 6px; }
   }
 </style>
 
 <script is:inline>
   (function() {
-    const DURATION = 2000; // Total loading duration in ms
+    const DURATION = 2000;
     const startTime = Date.now();
     const progressBar = document.getElementById('progress-bar');
     const dotItems = document.querySelectorAll('.dot-item');
     const loader = document.getElementById('page-loader');
-    
+
     function updateProgress() {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(100, (elapsed / DURATION) * 100);
-      
-      // Update progress bar
+
+      // Update progress bar and ARIA
       if (progressBar) {
         progressBar.style.width = progress + '%';
       }
-      
-      // Update dot active states based on progress
+      if (loader) {
+        loader.setAttribute('aria-valuenow', Math.round(progress).toString());
+      }
+
+      // Activate dots based on progress
       dotItems.forEach(item => {
         const threshold = parseInt(item.dataset.threshold, 10);
         if (progress >= threshold) {
           item.classList.add('active');
         }
       });
-      
-      // Continue until complete
+
       if (progress < 100) {
         requestAnimationFrame(updateProgress);
       } else {
-        // Loading complete - animate label text change with stagger
+        // Transform labels to titles with stagger
         dotItems.forEach((item, index) => {
           const labelText = item.querySelector('.label-text');
           const title = item.dataset.title;
-          
+
           setTimeout(() => {
             item.classList.add('changing');
-            
-            // Change text at midpoint of animation
             setTimeout(() => {
               if (labelText && title) {
                 labelText.textContent = title;
               }
             }, 160);
-          }, index * 50); // Stagger delay
+          }, index * 50);
         });
-        
-        // Start slide up after text change
+
+        // Slide up and complete
         setTimeout(() => {
           if (loader) {
             loader.classList.add('complete');
-            
             setTimeout(() => {
               loader.classList.add('hidden');
               window.dispatchEvent(new CustomEvent('pageLoaderComplete'));
-            }, 1000); // Matches faster animation duration
+            }, 1000);
           }
         }, 400);
       }
     }
-    
-    // Start progress animation
+
     requestAnimationFrame(updateProgress);
-    
-    // Fallback: Force complete after max wait
+
+    // Fallback timeout
     setTimeout(() => {
       if (loader && !loader.classList.contains('hidden')) {
         loader.classList.add('complete');

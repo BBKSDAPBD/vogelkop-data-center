@@ -9,38 +9,68 @@ import marquee5 from "@/assets/marquee5.svg";
 import gsap from "gsap";
 import { useEffect, useRef, useState } from "react";
 
-const images = [marquee, marquee1, marquee2, marquee3, marquee4, marquee5];
+/** Marquee image sources */
+const IMAGES = [marquee, marquee1, marquee2, marquee3, marquee4, marquee5];
 
-const BASE_SPEED = 1; // Normal timeScale
-const MAX_SPEED = 8; // Maximum speed when scrolling fast
-const VELOCITY_MULTIPLIER = 6; // How much scroll velocity affects speed
-const LERP_FACTOR = 0.1; // Smooth interpolation factor
-const SCROLL_HEIGHT = 150; // vh to track
+/** Animation configuration */
+const CONFIG = {
+    baseSpeed: 1,
+    maxSpeed: 8,
+    velocityMultiplier: 6,
+    lerpFactor: 0.1,
+    scrollHeight: 150, // vh to track
+    animationDuration: 40,
+    entranceDelay: 0.5,
+} as const;
 
+interface MarqueeImageProps {
+    src: string;
+    index: number;
+    prefix: string;
+}
+
+/**
+ * Single marquee image with hover effects.
+ */
+function MarqueeImage({ src, index, prefix }: MarqueeImageProps) {
+    return (
+        <img
+            key={`${prefix}-${index}`}
+            src={src}
+            alt=""
+            className="h-44 w-80 shrink-0 object-cover rounded-lg grayscale transition-all duration-300 hover:grayscale-0 hover:sepia-0 hover:hue-rotate-0 hover:brightness-100 hover:scale-105"
+        />
+    );
+}
+
+/**
+ * Infinite scrolling marquee with scroll-velocity-based speed.
+ * Pauses on hover and shows a progress bar indicating scroll position.
+ */
 export function Marquee() {
     const containerRef = useRef<HTMLDivElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const tweenRef = useRef<gsap.core.Tween | null>(null);
     const lastScrollY = useRef(0);
     const lastTime = useRef(Date.now());
-    const targetSpeed = useRef(BASE_SPEED);
-    const currentSpeed = useRef(BASE_SPEED);
-    const [progress, setProgress] = useState(0);
+    const targetSpeed = useRef(CONFIG.baseSpeed);
+    const currentSpeed = useRef(CONFIG.baseSpeed);
     const isHovered = useRef(false);
+    const [progress, setProgress] = useState(0);
 
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
 
-        // Create GSAP infinite animation
+        // Create infinite horizontal scroll animation
         tweenRef.current = gsap.to(container, {
             xPercent: -50,
-            duration: 40,
+            duration: CONFIG.animationDuration,
             ease: "none",
             repeat: -1,
         });
 
-        // Slide up entrance animation - wait for page loader to complete
+        // Entrance animation after page loader completes
         function startEntranceAnimation() {
             gsap.fromTo(
                 wrapperRef.current,
@@ -50,12 +80,12 @@ export function Marquee() {
                     opacity: 1,
                     duration: 1,
                     ease: "power3.out",
-                    delay: 0.5,
+                    delay: CONFIG.entranceDelay,
                 },
             );
         }
 
-        // Check if page loader already completed (in case we missed the event)
+        // Check if page loader already completed
         const loader = document.getElementById("page-loader");
         if (loader?.classList.contains("hidden")) {
             startEntranceAnimation();
@@ -77,12 +107,13 @@ export function Marquee() {
 
             // Set target speed based on velocity
             targetSpeed.current = Math.min(
-                MAX_SPEED,
-                BASE_SPEED + velocity * VELOCITY_MULTIPLIER,
+                CONFIG.maxSpeed,
+                CONFIG.baseSpeed + velocity * CONFIG.velocityMultiplier,
             );
 
             // Update scroll progress (0 to 1)
-            const scrollHeight = (SCROLL_HEIGHT / 100) * window.innerHeight;
+            const scrollHeight =
+                (CONFIG.scrollHeight / 100) * window.innerHeight;
             const scrollProgress = Math.min(1, window.scrollY / scrollHeight);
             setProgress(scrollProgress);
 
@@ -93,11 +124,14 @@ export function Marquee() {
         function updateSpeed() {
             // Smoothly interpolate current speed toward target
             currentSpeed.current +=
-                (targetSpeed.current - currentSpeed.current) * LERP_FACTOR;
+                (targetSpeed.current - currentSpeed.current) *
+                CONFIG.lerpFactor;
 
             // Decay target speed back to base
             targetSpeed.current +=
-                (BASE_SPEED - targetSpeed.current) * LERP_FACTOR * 0.5;
+                (CONFIG.baseSpeed - targetSpeed.current) *
+                CONFIG.lerpFactor *
+                0.5;
 
             // Apply timeScale to GSAP tween (pause when hovering)
             if (tweenRef.current) {
@@ -107,7 +141,7 @@ export function Marquee() {
                 const currentTimeScale = tweenRef.current.timeScale();
                 const newTimeScale =
                     currentTimeScale +
-                    (targetTimeScale - currentTimeScale) * LERP_FACTOR;
+                    (targetTimeScale - currentTimeScale) * CONFIG.lerpFactor;
                 tweenRef.current.timeScale(newTimeScale);
             }
 
@@ -120,26 +154,31 @@ export function Marquee() {
         return () => {
             window.removeEventListener("scroll", handleScroll);
             cancelAnimationFrame(rafId);
-            if (tweenRef.current) {
-                tweenRef.current.kill();
-            }
+            tweenRef.current?.kill();
         };
     }, []);
 
     return (
-        <div
+        <figure
             ref={wrapperRef}
             className="w-full overflow-visible absolute bottom-8 left-0 opacity-0 pb-4"
+            aria-label="Image gallery marquee"
         >
             {/* Scroll Progress Bar */}
-            <div className="w-full h-0.5  mb-4 rounded-full overflow-hidden">
+            <div
+                className="w-full h-0.5 mb-4 rounded-full overflow-hidden"
+                role="progressbar"
+                aria-valuenow={Math.round(progress * 100)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+            >
                 <div
                     className="h-full bg-primary/60 rounded-full transition-[width] duration-100 ease-out"
                     style={{ width: `${progress * 100}%` }}
                 />
             </div>
 
-            {/* Marquee */}
+            {/* Marquee Container */}
             <div
                 ref={containerRef}
                 className="flex gap-4 w-max"
@@ -147,23 +186,25 @@ export function Marquee() {
                 onMouseEnter={() => (isHovered.current = true)}
                 onMouseLeave={() => (isHovered.current = false)}
             >
-                {images.map((img, i) => (
-                    <img
+                {/* First set of images */}
+                {IMAGES.map((img, i) => (
+                    <MarqueeImage
                         key={`a-${i}`}
                         src={img.src}
-                        alt=""
-                        className="h-44 w-80 shrink-0 object-cover rounded-lg grayscale transition-all duration-300 hover:grayscale-0 hover:sepia-0 hover:hue-rotate-0 hover:brightness-100 hover:scale-105"
+                        index={i}
+                        prefix="a"
                     />
                 ))}
-                {images.map((img, i) => (
-                    <img
+                {/* Duplicated for seamless loop */}
+                {IMAGES.map((img, i) => (
+                    <MarqueeImage
                         key={`b-${i}`}
                         src={img.src}
-                        alt=""
-                        className="h-44 w-80 shrink-0 object-cover rounded-lg grayscale transition-all duration-300 hover:grayscale-0 hover:sepia-0 hover:hue-rotate-0 hover:brightness-100 hover:scale-105"
+                        index={i}
+                        prefix="b"
                     />
                 ))}
             </div>
-        </div>
+        </figure>
     );
 }
