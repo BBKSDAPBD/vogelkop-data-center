@@ -124,7 +124,7 @@ function FeatureCard({ feature, index, isInView }: FeatureCardProps) {
             </p>
             <Button
                 variant="decorations"
-                className="mt-4 px-4 py-2 bg-primary hover:bg-primary-foreground"
+                className="mt-4 px-4 py-2 bg-primary hover:bg-primary-foreground text-background hover:text-foreground"
             >
                 {feature.button}
             </Button>

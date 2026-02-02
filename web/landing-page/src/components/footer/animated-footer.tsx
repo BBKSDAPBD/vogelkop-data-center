@@ -1,5 +1,6 @@
 "use client";
 
+import logoSrc from "@/assets/logo.svg";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
@@ -203,6 +204,21 @@ export function AnimatedFooter() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
                         {/* Brand */}
                         <div className="space-y-4">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{
+                                    duration: 0.5,
+                                    ease: ANIMATION.easing,
+                                }}
+                            >
+                                <img
+                                    src={logoSrc.src}
+                                    alt="BBKSDA Papua Barat Daya Logo"
+                                    className="h-16 w-auto mb-4"
+                                />
+                            </motion.div>
                             <motion.h3
                                 className="text-xl font-semibold"
                                 initial={{ opacity: 0, y: 20 }}
@@ -210,6 +226,7 @@ export function AnimatedFooter() {
                                 viewport={{ once: true }}
                                 transition={{
                                     duration: 0.5,
+                                    delay: 0.05,
                                     ease: ANIMATION.easing,
                                 }}
                             >
