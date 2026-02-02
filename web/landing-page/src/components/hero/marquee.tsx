@@ -38,7 +38,7 @@ function MarqueeImage({ src, index, prefix }: MarqueeImageProps) {
             key={`${prefix}-${index}`}
             src={src}
             alt=""
-            className="h-44 w-80 shrink-0 object-cover rounded-lg grayscale transition-all duration-300 hover:grayscale-0 hover:sepia-0 hover:hue-rotate-0 hover:brightness-100 hover:scale-105"
+            className="h-44 w-80 shrink-0 object-cover grayscale transition-all duration-300 hover:grayscale-0 hover:sepia-0 hover:hue-rotate-0 hover:brightness-100 hover:scale-105"
         />
     );
 }
@@ -53,8 +53,8 @@ export function Marquee() {
     const tweenRef = useRef<gsap.core.Tween | null>(null);
     const lastScrollY = useRef(0);
     const lastTime = useRef(Date.now());
-    const targetSpeed = useRef(CONFIG.baseSpeed);
-    const currentSpeed = useRef(CONFIG.baseSpeed);
+    const targetSpeed = useRef<number>(CONFIG.baseSpeed);
+    const currentSpeed = useRef<number>(CONFIG.baseSpeed);
     const isHovered = useRef(false);
     const [progress, setProgress] = useState(0);
 
@@ -166,14 +166,14 @@ export function Marquee() {
         >
             {/* Scroll Progress Bar */}
             <div
-                className="w-full h-0.5 mb-4 rounded-full overflow-hidden"
+                className="w-full h-0.5 mb-4 overflow-hidden"
                 role="progressbar"
                 aria-valuenow={Math.round(progress * 100)}
                 aria-valuemin={0}
                 aria-valuemax={100}
             >
                 <div
-                    className="h-full bg-primary/60 rounded-full transition-[width] duration-100 ease-out"
+                    className="h-full bg-primary/60 transition-[width] duration-100 ease-out"
                     style={{ width: `${progress * 100}%` }}
                 />
             </div>

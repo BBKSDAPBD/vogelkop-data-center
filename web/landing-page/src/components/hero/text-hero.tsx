@@ -283,7 +283,7 @@ export function TextHero() {
     return (
         <article ref={containerRef} className="h-[300vh] -mt-[50vh] relative">
             <div className="sticky top-0 h-screen p-4 pb-16 flex items-center">
-                <div className="flex gap-4 text-3xl font-medium w-full">
+                <div className="flex gap-4 text-3xl font-medium w-full px-8">
                     <div className="flex-1">
                         <AnimatedTextOnLoad
                             text={HERO_TEXTS[0]}
