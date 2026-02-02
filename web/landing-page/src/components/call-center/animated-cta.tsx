@@ -207,7 +207,7 @@ export function AnimatedCTA() {
                     {/* Large Typography */}
                     <div className="overflow-hidden">
                         <motion.h2
-                            className=" text-4xl font-bold leading-none tracking-tighter"
+                            className=" text-4xl font-semibold"
                             initial={{ y: "100%" }}
                             animate={isInView ? { y: 0 } : { y: "100%" }}
                             transition={{
@@ -255,14 +255,14 @@ export function AnimatedCTA() {
                     >
                         <button
                             onClick={handlePrev}
-                            className="w-10 h-10 rounded-full border border-zinc-600 flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-400 transition-colors"
+                            className="w-10 h-10 rounded-full border border-zinc-600 flex items-center justify-center text-zinc-400 hover:text-primary hover:border-zinc-400 transition-colors"
                             aria-label="Previous"
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <button
                             onClick={handleNext}
-                            className="w-10 h-10 rounded-full border border-zinc-600 flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-400 transition-colors"
+                            className="w-10 h-10 rounded-full border border-zinc-600 flex items-center justify-center text-zinc-400 hover:text-primary hover:border-zinc-400 transition-colors"
                             aria-label="Next"
                         >
                             <ArrowRight className="w-5 h-5" />
