@@ -2,7 +2,7 @@
 
 import { useLoaderComplete } from "@/hooks/use-loader-complete";
 import { motion, useScroll, useTransform } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Marquee } from "./marquee";
 
 /** Hero text content for the three columns */
@@ -67,7 +67,7 @@ function AnimatedWordOnLoad({
     );
 
     const highlightClass = isHighlighted
-        ? "text-primary underline decoration-dotted underline-offset-4"
+        ? "text-primary font-semibold underline decoration-dotted underline-offset-4"
         : "";
 
     return (
@@ -159,7 +159,7 @@ function AnimatedWordOnScroll({
     });
 
     const highlightClass = isHighlighted
-        ? "text-primary underline decoration-dotted underline-offset-4"
+        ? "text-primary font-semibold underline decoration-dotted underline-offset-4"
         : "";
 
     return (
@@ -268,6 +268,137 @@ function AnimatedTextOnScroll({
     );
 }
 
+/** Pixel configuration for hero background */
+const PIXEL_CONFIG = {
+    size: 6,
+    gap: 1,
+} as const;
+
+interface Pixel {
+    x: number;
+    y: number;
+    targetOpacity: number;
+    phase: number;
+    speed: number;
+    hue: number;
+}
+
+/**
+ * Generate landscape height at a given x position
+ */
+function getLandscapeHeight(x: number, width: number): number {
+    const normalizedX = x / width;
+    let height = 0;
+
+    height += Math.sin(normalizedX * Math.PI * 2) * 0.3;
+    height += Math.sin(normalizedX * Math.PI * 4 + 1) * 0.15;
+    height += Math.sin(normalizedX * Math.PI * 8 + 2) * 0.1;
+    height += Math.sin(normalizedX * Math.PI * 6 + 0.5) * 0.08;
+    height += Math.sin(normalizedX * Math.PI * 20 + 3) * 0.05;
+    height += Math.sin(normalizedX * Math.PI * 30) * 0.03;
+
+    return (height + 0.7) * 0.5;
+}
+
+/**
+ * Pixel background component for hero section
+ */
+function PixelBackground() {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const pixelsRef = useRef<Pixel[]>([]);
+    const animationRef = useRef<number>(0);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const { size, gap } = PIXEL_CONFIG;
+        const cellSize = size + gap;
+
+        const initCanvas = () => {
+            const parent = canvas.parentElement;
+            if (parent) {
+                canvas.width = parent.offsetWidth;
+                canvas.height = parent.offsetHeight;
+            }
+
+            const cols = Math.ceil(canvas.width / cellSize);
+            const rows = Math.ceil(canvas.height / cellSize);
+
+            pixelsRef.current = [];
+
+            for (let x = 0; x < cols; x++) {
+                const landscapeHeight = getLandscapeHeight(x, cols);
+                const maxRow = Math.floor(rows * landscapeHeight);
+
+                // Fill from top (0) down to maxRow (reversed)
+                for (let y = 0; y < maxRow; y++) {
+                    const edgeDistance = maxRow - y;
+                    const isEdge = edgeDistance < 3;
+
+                    if (isEdge && Math.random() > 0.6) continue;
+
+                    pixelsRef.current.push({
+                        x,
+                        y,
+                        targetOpacity: 0.3 + Math.random() * 0.3,
+                        phase: Math.random() * Math.PI * 2,
+                        speed: 0.015 + Math.random() * 0.015,
+                        hue: 130 + Math.random() * 50,
+                    });
+                }
+            }
+        };
+
+        initCanvas();
+
+        let time = 0;
+        const animate = () => {
+            if (!ctx || !canvas) return;
+
+            time += 0.016;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (const pixel of pixelsRef.current) {
+                const twinkle = Math.sin(time * pixel.speed * 60 + pixel.phase);
+                const currentOpacity =
+                    pixel.targetOpacity * (0.5 + twinkle * 0.5);
+
+                ctx.fillStyle = `hsla(${pixel.hue}, 50%, 45%, ${currentOpacity})`;
+                ctx.fillRect(
+                    pixel.x * cellSize,
+                    pixel.y * cellSize,
+                    size,
+                    size,
+                );
+            }
+
+            animationRef.current = requestAnimationFrame(animate);
+        };
+
+        animate();
+
+        const handleResize = () => initCanvas();
+        window.addEventListener("resize", handleResize);
+
+        return () => {
+            window.removeEventListener("resize", handleResize);
+            cancelAnimationFrame(animationRef.current);
+        };
+    }, []);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            aria-hidden="true"
+        />
+    );
+}
+
 /**
  * Main hero text component with scroll-driven animations.
  * Displays three columns of text that animate in sequence as user scrolls.
@@ -282,8 +413,13 @@ export function TextHero() {
 
     return (
         <article ref={containerRef} className="h-[300vh] -mt-[50vh] relative">
-            <div className="sticky top-0 h-screen p-4 pb-16 flex items-center">
-                <div className="flex gap-4 text-3xl font-medium w-full">
+            <div className="sticky top-0 h-screen p-4 pb-16 flex items-center overflow-hidden">
+                {/* Pixel Animation Background */}
+                <div className="absolute inset-0 opacity-20">
+                    <PixelBackground />
+                </div>
+
+                <div className="flex gap-4 text-3xl font-medium w-full px-8 relative z-10">
                     <div className="flex-1">
                         <AnimatedTextOnLoad
                             text={HERO_TEXTS[0]}

@@ -19,6 +19,7 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@optics": "https://optics.agusmayol.com.ar/r/{name}.json"
+    "@optics": "https://optics.agusmayol.com.ar/r/{name}.json",
+    "@lucide-animated": "https://lucide-animated.com/r/{name}.json"
   }
 }
